@@ -1,4 +1,5 @@
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -8,6 +9,19 @@ let isConnected = false;
 let clientInfo = null;
 
 const DATA_DIR = process.env.DATA_DIR || '.';
+
+function convertToOpus(inputPath) {
+  const outputPath = inputPath + '_wa.ogg';
+  try {
+    execSync(`ffmpeg -i "${inputPath}" -c:a libopus -b:a 64k -vn "${outputPath}" -y`, {
+      timeout: 30000, stdio: 'pipe'
+    });
+    return outputPath;
+  } catch (e) {
+    console.error('Audio conversion failed, sending original:', e.message);
+    return null;
+  }
+}
 
 // Delete stale Chrome user data dirs on startup — LocalAuth restores WA session from its zip backup.
 // LocalAuth names the dir "session" (no clientId) or "session-{clientId}". We wipe ALL session* dirs
@@ -117,11 +131,17 @@ async function sendBotResponse(chatId, phone, db, io) {
 
     const audioPath = db.getConfig('audio_file');
     if (audioPath && fs.existsSync(audioPath)) {
-      const media = MessageMedia.fromFilePath(audioPath);
-      await client.sendMessage(chatId, media, { sendAudioAsVoice: true });
-      const m = db.saveMessage(phone, 'out', 'audio', '🎵 Voice message', audioPath, true);
-      io.emit('new_message', { phone, ...m });
-      await sleep(1000);
+      const convertedPath = convertToOpus(audioPath);
+      const sendPath = convertedPath || audioPath;
+      try {
+        const media = MessageMedia.fromFilePath(sendPath);
+        await client.sendMessage(chatId, media, { sendAudioAsVoice: true });
+        const m = db.saveMessage(phone, 'out', 'audio', '🎵 Voice message', audioPath, true);
+        io.emit('new_message', { phone, ...m });
+        await sleep(1000);
+      } finally {
+        if (convertedPath && fs.existsSync(convertedPath)) fs.unlinkSync(convertedPath);
+      }
     }
 
     const imagesJson = db.getConfig('images');
