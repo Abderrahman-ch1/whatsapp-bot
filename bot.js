@@ -1,5 +1,6 @@
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const fs = require('fs');
+const path = require('path');
 
 let client = null;
 let currentQR = null;
@@ -8,15 +9,32 @@ let clientInfo = null;
 
 const DATA_DIR = process.env.DATA_DIR || '.';
 
+// Remove Chromium lock files left by crashed/restarted containers
+function clearChromiumLocks() {
+  const base = path.join(DATA_DIR, '.wwebjs_auth', 'session-default');
+  ['SingletonLock', 'SingletonCookie', 'SingletonSocket'].forEach(f => {
+    try { fs.unlinkSync(path.join(base, f)); } catch {}
+  });
+}
+
 function init(io, db) {
+  clearChromiumLocks();
+
   const puppeteerOpts = {
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-zygote',
+    ],
     headless: true,
   };
   if (process.env.CHROMIUM_PATH) puppeteerOpts.executablePath = process.env.CHROMIUM_PATH;
 
   client = new Client({
-    authStrategy: new LocalAuth({ dataPath: `${DATA_DIR}/.wwebjs_auth` }),
+    authStrategy: new LocalAuth({ dataPath: path.join(DATA_DIR, '.wwebjs_auth') }),
     puppeteer: puppeteerOpts,
   });
 
