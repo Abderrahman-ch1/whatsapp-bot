@@ -9,12 +9,17 @@ let clientInfo = null;
 
 const DATA_DIR = process.env.DATA_DIR || '.';
 
-// Remove Chromium lock files left by crashed/restarted containers
+// Delete stale Chrome user data dir on startup — LocalAuth restores WA session from its zip backup
 function clearChromiumLocks() {
-  const base = path.join(DATA_DIR, '.wwebjs_auth', 'session-default');
-  ['SingletonLock', 'SingletonCookie', 'SingletonSocket'].forEach(f => {
-    try { fs.unlinkSync(path.join(base, f)); } catch {}
-  });
+  const sessionDir = path.join(DATA_DIR, '.wwebjs_auth', 'session-default');
+  try {
+    if (fs.existsSync(sessionDir)) {
+      fs.rmSync(sessionDir, { recursive: true, force: true });
+      console.log('🧹 Cleared stale Chrome session dir');
+    }
+  } catch (e) {
+    console.error('Could not clear session dir:', e.message);
+  }
 }
 
 function init(io, db) {
