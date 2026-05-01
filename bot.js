@@ -9,16 +9,25 @@ let clientInfo = null;
 
 const DATA_DIR = process.env.DATA_DIR || '.';
 
-// Delete stale Chrome user data dir on startup — LocalAuth restores WA session from its zip backup
+// Delete stale Chrome user data dirs on startup — LocalAuth restores WA session from its zip backup.
+// LocalAuth names the dir "session" (no clientId) or "session-{clientId}". We wipe ALL session* dirs
+// so the hostname embedded in SingletonLock from a crashed container can never block a fresh start.
 function clearChromiumLocks() {
-  const sessionDir = path.join(DATA_DIR, '.wwebjs_auth', 'session-default');
+  const authDir = path.join(DATA_DIR, '.wwebjs_auth');
   try {
-    if (fs.existsSync(sessionDir)) {
-      fs.rmSync(sessionDir, { recursive: true, force: true });
-      console.log('🧹 Cleared stale Chrome session dir');
+    if (!fs.existsSync(authDir)) return;
+    let cleared = false;
+    for (const entry of fs.readdirSync(authDir)) {
+      const full = path.join(authDir, entry);
+      if (entry.startsWith('session') && fs.statSync(full).isDirectory()) {
+        fs.rmSync(full, { recursive: true, force: true });
+        console.log(`🧹 Cleared stale Chrome session dir: ${entry}`);
+        cleared = true;
+      }
     }
+    if (!cleared) console.log('🧹 No stale Chrome session dirs found');
   } catch (e) {
-    console.error('Could not clear session dir:', e.message);
+    console.error('Could not clear session dirs:', e.message);
   }
 }
 
