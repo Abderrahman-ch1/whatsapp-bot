@@ -96,6 +96,7 @@ function init(io, db) {
     const alreadyHandled = db.isContactBotHandled(phone);
 
     if (!alreadyHandled && triggerKw && body.toLowerCase().includes(triggerKw.toLowerCase())) {
+      await sleep(30000);
       await sendBotResponse(msg.from, phone, db, io);
     }
   });
