@@ -1007,7 +1007,7 @@ function buildMsgHTML(msg) {
       <div class="waveform">${bars}</div>
     </div>`;
   } else if (msg.type === 'image' && msg.file_path) {
-    const url = '/' + msg.file_path.replace(/\\/g, '/');
+    const url = filePathToUrl(msg.file_path);
     content = `<div class="msg-image"><img src="${url}" alt="Product" onclick="openLightbox('${url}')"></div>`;
   } else {
     content = `<div style="padding:9px 13px">${escHtml(msg.content || '')}</div>`;
@@ -1157,12 +1157,18 @@ async function uploadImages(files) {
   }
 }
 
+function filePathToUrl(p) {
+  const normalized = p.replace(/\\/g, '/');
+  const match = normalized.match(/(\/uploads\/.+)/);
+  return match ? match[1] : '/' + normalized;
+}
+
 function renderImageGrid(images) {
   currentImages = images;
   const grid = document.getElementById('images-grid');
   grid.innerHTML = images.map((img, i) => {
     const p = img.path || img;
-    const url = '/' + p.replace(/\\/g, '/');
+    const url = filePathToUrl(p);
     const fname = p.split(/[/\\]/).pop();
     return `<div class="img-thumb">
       <img src="${url}" alt="Product ${i+1}">
