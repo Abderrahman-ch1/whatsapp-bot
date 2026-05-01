@@ -1,0 +1,7 @@
+node_modules
+.wwebjs_auth
+data
+uploads
+*.log
+.git
+start.command
