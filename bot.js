@@ -106,12 +106,18 @@ function init(io, db) {
 
     io.emit('new_message', { phone, name: contactName, ...saved });
 
-    const triggerKw = db.getConfig('trigger_keyword');
     const alreadyHandled = db.isContactBotHandled(phone);
-
-    if (!alreadyHandled && triggerKw && body.toLowerCase().includes(triggerKw.toLowerCase())) {
-      await sleep(30000);
-      await sendBotResponse(msg.from, phone, db, io);
+    if (!alreadyHandled) {
+      const triggerKw  = db.getConfig('trigger_keyword');
+      const triggerKw2 = db.getConfig('trigger_keyword_2');
+      const lc = body.toLowerCase();
+      if (triggerKw && lc.includes(triggerKw.toLowerCase())) {
+        await sleep(30000);
+        await sendBotResponse(msg.from, phone, db, io, '');
+      } else if (triggerKw2 && lc.includes(triggerKw2.toLowerCase())) {
+        await sleep(30000);
+        await sendBotResponse(msg.from, phone, db, io, '_2');
+      }
     }
   });
 
@@ -119,9 +125,9 @@ function init(io, db) {
   client.initialize();
 }
 
-async function sendBotResponse(chatId, phone, db, io) {
+async function sendBotResponse(chatId, phone, db, io, sfx = '') {
   try {
-    const priceText = db.getConfig('price_text');
+    const priceText = db.getConfig(`price_text${sfx}`);
     if (priceText) {
       await client.sendMessage(chatId, priceText);
       const m = db.saveMessage(phone, 'out', 'text', priceText, null, true);
@@ -129,7 +135,7 @@ async function sendBotResponse(chatId, phone, db, io) {
       await sleep(800);
     }
 
-    const audioPath = db.getConfig('audio_file');
+    const audioPath = db.getConfig(`audio_file${sfx}`);
     if (audioPath && fs.existsSync(audioPath)) {
       const convertedPath = convertToOpus(audioPath);
       const sendPath = convertedPath || audioPath;
@@ -144,7 +150,7 @@ async function sendBotResponse(chatId, phone, db, io) {
       }
     }
 
-    const imagesJson = db.getConfig('images');
+    const imagesJson = db.getConfig(`images${sfx}`);
     if (imagesJson) {
       const images = JSON.parse(imagesJson);
       for (const img of images) {
@@ -160,7 +166,7 @@ async function sendBotResponse(chatId, phone, db, io) {
     }
 
     db.markBotHandled(phone);
-    console.log(`🤖 Bot response sent to ${phone}`);
+    console.log(`🤖 Bot response sent to ${phone} (campaign${sfx || '1'})`);
   } catch (err) {
     console.error('Bot error:', err.message);
   }

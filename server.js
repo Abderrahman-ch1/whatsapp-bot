@@ -62,42 +62,48 @@ app.post('/api/send', async (req, res) => {
 app.get('/api/config', (req, res) => res.json(db.getAllConfig()));
 
 app.post('/api/config', (req, res) => {
-  const { trigger_keyword, price_text } = req.body;
-  if (trigger_keyword !== undefined) db.setConfig('trigger_keyword', trigger_keyword);
-  if (price_text !== undefined) db.setConfig('price_text', price_text);
+  const { trigger_keyword, price_text, trigger_keyword_2, price_text_2 } = req.body;
+  if (trigger_keyword   !== undefined) db.setConfig('trigger_keyword',   trigger_keyword);
+  if (price_text        !== undefined) db.setConfig('price_text',        price_text);
+  if (trigger_keyword_2 !== undefined) db.setConfig('trigger_keyword_2', trigger_keyword_2);
+  if (price_text_2      !== undefined) db.setConfig('price_text_2',      price_text_2);
   res.json({ success: true });
 });
 
 // ── Audio upload ──────────────────────────────────────────
 app.post('/api/upload/audio', uploadAudio.single('audio'), (req, res) => {
+  const sfx = req.query.slot === '2' ? '_2' : '';
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  db.setConfig('audio_file', req.file.path);
-  db.setConfig('audio_name', req.file.originalname);
+  db.setConfig(`audio_file${sfx}`, req.file.path);
+  db.setConfig(`audio_name${sfx}`, req.file.originalname);
   res.json({ success: true, path: req.file.path, name: req.file.originalname });
 });
 
 app.delete('/api/upload/audio', (req, res) => {
-  const p = db.getConfig('audio_file');
+  const sfx = req.query.slot === '2' ? '_2' : '';
+  const p = db.getConfig(`audio_file${sfx}`);
   if (p && fs.existsSync(p)) fs.unlinkSync(p);
-  db.setConfig('audio_file', '');
-  db.setConfig('audio_name', '');
+  db.setConfig(`audio_file${sfx}`, '');
+  db.setConfig(`audio_name${sfx}`, '');
   res.json({ success: true });
 });
 
 // ── Image upload ──────────────────────────────────────────
 app.post('/api/upload/images', uploadImages.array('images', 20), (req, res) => {
+  const sfx = req.query.slot === '2' ? '_2' : '';
   if (!req.files?.length) return res.status(400).json({ error: 'No files uploaded' });
-  const existing = JSON.parse(db.getConfig('images') || '[]');
+  const existing = JSON.parse(db.getConfig(`images${sfx}`) || '[]');
   const newFiles = req.files.map(f => ({ path: f.path, name: f.originalname }));
-  db.setConfig('images', JSON.stringify([...existing, ...newFiles]));
+  db.setConfig(`images${sfx}`, JSON.stringify([...existing, ...newFiles]));
   res.json({ success: true, files: newFiles });
 });
 
 app.delete('/api/upload/images/:filename', (req, res) => {
-  const existing = JSON.parse(db.getConfig('images') || '[]');
+  const sfx = req.query.slot === '2' ? '_2' : '';
+  const existing = JSON.parse(db.getConfig(`images${sfx}`) || '[]');
   const target = existing.find(f => f.path.includes(req.params.filename));
   if (target && fs.existsSync(target.path)) fs.unlinkSync(target.path);
-  db.setConfig('images', JSON.stringify(existing.filter(f => !f.path.includes(req.params.filename))));
+  db.setConfig(`images${sfx}`, JSON.stringify(existing.filter(f => !f.path.includes(req.params.filename))));
   res.json({ success: true });
 });
 
