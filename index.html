@@ -660,6 +660,35 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .login-btn:hover { background: var(--green-dim); box-shadow: 0 4px 24px rgba(34,197,94,.45); }
 .login-btn:active { transform: scale(.97); }
 .login-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ── RECORD ── */
+.record-row {
+  display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+}
+.record-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 13px; background: var(--elevated); border: 1px solid var(--border-soft);
+  border-radius: var(--r); color: var(--t2); font-size: 12.5px; font-family: 'Outfit', sans-serif;
+  cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+.record-btn:hover { background: var(--hover); color: var(--t1); border-color: var(--green); }
+.record-btn.recording { background: rgba(239,68,68,.1); border-color: var(--red); color: var(--red); }
+.record-timer {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--red); font-family: 'JetBrains Mono', monospace;
+}
+.record-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--red);
+  animation: blink .9s ease-in-out infinite;
+}
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .2; } }
+.record-stop-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 12px; background: var(--red); border: none;
+  border-radius: var(--r); color: #fff; font-size: 12px; font-family: 'Outfit', sans-serif;
+  cursor: pointer; transition: opacity .15s;
+}
+.record-stop-btn:hover { opacity: .85; }
 </style>
 </head>
 <body>
@@ -904,6 +933,20 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
           Click to upload audio or drag & drop<br>
           <span style="font-size:11px;color:var(--t3)">MP3, OGG, M4A, WAV supported</span>
         </div>
+        <div class="record-row">
+          <span style="font-size:11px;color:var(--t3)">or</span>
+          <button class="record-btn" id="record-btn" onclick="toggleRecording(1)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/><line x1="9" y1="21" x2="15" y2="21" stroke="currentColor" stroke-width="2"/></svg>
+            Record voice note
+          </button>
+          <span class="record-timer" id="record-timer" style="display:none">
+            <span class="record-dot"></span><span id="record-time">0:00</span>
+          </span>
+          <button class="record-stop-btn" id="record-stop-btn" style="display:none" onclick="stopRecording(1)">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            Stop
+          </button>
+        </div>
       </div>
 
       <!-- Images -->
@@ -994,6 +1037,20 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
           </svg>
           Click to upload audio or drag & drop<br>
           <span style="font-size:11px;color:var(--t3)">MP3, OGG, M4A, WAV supported</span>
+        </div>
+        <div class="record-row">
+          <span style="font-size:11px;color:var(--t3)">or</span>
+          <button class="record-btn" id="record-btn-2" onclick="toggleRecording(2)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/><line x1="9" y1="21" x2="15" y2="21" stroke="currentColor" stroke-width="2"/></svg>
+            Record voice note
+          </button>
+          <span class="record-timer" id="record-timer-2" style="display:none">
+            <span class="record-dot"></span><span id="record-time-2">0:00</span>
+          </span>
+          <button class="record-stop-btn" id="record-stop-btn-2" style="display:none" onclick="stopRecording(2)">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            Stop
+          </button>
         </div>
       </div>
 
@@ -1441,6 +1498,73 @@ audioZone.addEventListener('drop', (e) => {
 audioInput.addEventListener('change', () => {
   if (audioInput.files[0]) uploadAudio(audioInput.files[0]);
 });
+
+// ── RECORDING ─────────────────────────────────────────────
+let mediaRecorder = null;
+let recordChunks = [];
+let recordSlot = 1;
+let recordTimerInterval = null;
+let recordSeconds = 0;
+
+async function toggleRecording(slot) {
+  if (mediaRecorder && mediaRecorder.state === 'recording') return;
+  recordSlot = slot;
+  const s = slot === 2 ? '-2' : '';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')
+        ? 'audio/ogg;codecs=opus'
+        : 'audio/webm';
+    mediaRecorder = new MediaRecorder(stream, { mimeType });
+    recordChunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(recordChunks, { type: mediaRecorder.mimeType });
+      const ext = mimeType.includes('ogg') ? 'ogg' : 'webm';
+      const file = new File([blob], `recording.${ext}`, { type: mimeType });
+      uploadAudio(file, recordSlot);
+      setRecordingUI(slot, false);
+    };
+    mediaRecorder.start();
+    setRecordingUI(slot, true);
+  } catch (err) {
+    toast('Microphone access denied', 'error');
+  }
+}
+
+function stopRecording(slot) {
+  if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+}
+
+function setRecordingUI(slot, isRecording) {
+  const s = slot === 2 ? '-2' : '';
+  const btn = document.getElementById(`record-btn${s}`);
+  const timer = document.getElementById(`record-timer${s}`);
+  const stopBtn = document.getElementById(`record-stop-btn${s}`);
+  const timeEl = document.getElementById(`record-time${s}`);
+
+  if (isRecording) {
+    btn.style.display = 'none';
+    timer.style.display = 'flex';
+    stopBtn.style.display = 'flex';
+    recordSeconds = 0;
+    timeEl.textContent = '0:00';
+    recordTimerInterval = setInterval(() => {
+      recordSeconds++;
+      const m = Math.floor(recordSeconds / 60);
+      const sc = String(recordSeconds % 60).padStart(2, '0');
+      timeEl.textContent = `${m}:${sc}`;
+    }, 1000);
+  } else {
+    clearInterval(recordTimerInterval);
+    btn.style.display = '';
+    timer.style.display = 'none';
+    stopBtn.style.display = 'none';
+  }
+}
 
 async function uploadAudio(file, slot = 1) {
   const fd = new FormData();
