@@ -200,6 +200,27 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 #search::placeholder { color: var(--t3); }
 #search:focus { border-color: var(--green-dim); }
 
+.sidebar-tabs {
+  display: flex; gap: 4px; padding: 0 10px 10px;
+}
+.sidebar-tab {
+  flex: 1; padding: 7px 8px; border: 1px solid var(--border);
+  background: transparent; border-radius: var(--rs);
+  color: var(--t2); font-size: 12px; font-family: 'Outfit', sans-serif;
+  cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.sidebar-tab:hover { background: var(--hover); color: var(--t1); }
+.sidebar-tab.active {
+  background: var(--green-glow); border-color: var(--green);
+  color: var(--green-text); font-weight: 600;
+}
+.tab-badge {
+  background: var(--red); color: #fff; font-size: 10px; font-weight: 700;
+  min-width: 16px; height: 16px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0 4px;
+}
+
 .sidebar-list {
   flex: 1; overflow-y: auto; padding: 6px;
 }
@@ -233,6 +254,11 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .bot-badge {
   font-size: 9px; font-weight: 600; letter-spacing: .04em;
   color: var(--green-text); background: var(--green-glow); border: 1px solid var(--green-dim);
+  padding: 1px 5px; border-radius: 3px; flex-shrink: 0;
+}
+.reply-badge {
+  font-size: 9px; font-weight: 600; letter-spacing: .04em;
+  color: #fff; background: var(--amber); border: 1px solid #d97706;
   padding: 1px 5px; border-radius: 3px; flex-shrink: 0;
 }
 .conv-preview {
@@ -823,6 +849,13 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         </svg>
         <input type="text" id="search" placeholder="Search conversations…">
       </div>
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" id="tab-all" onclick="switchTab('all')">All</button>
+        <button class="sidebar-tab" id="tab-followups" onclick="switchTab('followups')">
+          Needs Reply
+          <span class="tab-badge" id="followup-badge" style="display:none"></span>
+        </button>
+      </div>
     </div>
     <div class="sidebar-list" id="conv-list">
       <div class="sidebar-empty">
@@ -1148,6 +1181,7 @@ const state = {
   activePhone: null,
   messages: [],
   settingsVisible: true,
+  activeTab: 'all',
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -1262,20 +1296,44 @@ async function loadConversations() {
   renderConvList();
 }
 
+function updateFollowupBadge() {
+  const count = state.conversations.filter(isFollowup).length;
+  const badge = document.getElementById('followup-badge');
+  if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.style.display = ''; }
+  else { badge.style.display = 'none'; }
+}
+
+function isFollowup(c) {
+  return c.bot_handled && c.last_direction === 'in';
+}
+
+function switchTab(tab) {
+  state.activeTab = tab;
+  document.getElementById('tab-all').classList.toggle('active', tab === 'all');
+  document.getElementById('tab-followups').classList.toggle('active', tab === 'followups');
+  renderConvList(document.getElementById('search').value);
+}
+
 function renderConvList(filter = '') {
   const list = document.getElementById('conv-list');
+  updateFollowupBadge();
+
+  let pool = state.activeTab === 'followups'
+    ? state.conversations.filter(isFollowup)
+    : state.conversations;
+
   const filtered = filter
-    ? state.conversations.filter(c =>
+    ? pool.filter(c =>
         (c.name || c.phone).toLowerCase().includes(filter.toLowerCase()) ||
         c.phone.includes(filter))
-    : state.conversations;
+    : pool;
 
   if (!filtered.length) {
     list.innerHTML = `<div class="sidebar-empty">
       <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
       </svg>
-      <p>${filter ? 'No results found.' : 'No conversations yet.<br>Messages from customers will appear here.'}</p>
+      <p>${filter ? 'No results found.' : state.activeTab === 'followups' ? 'No follow-ups yet.<br>Clients who reply after the bot will appear here.' : 'No conversations yet.<br>Messages from customers will appear here.'}</p>
     </div>`;
     return;
   }
@@ -1287,7 +1345,7 @@ function renderConvList(filter = '') {
       <div class="conv-info">
         <div class="conv-name">
           ${escHtml(c.name || c.phone)}
-          ${c.bot_handled ? '<span class="bot-badge">BOT</span>' : ''}
+          ${isFollowup(c) ? '<span class="reply-badge">REPLY</span>' : c.bot_handled ? '<span class="bot-badge">BOT</span>' : ''}
         </div>
         <div class="conv-preview">${previewText(c)}</div>
       </div>
