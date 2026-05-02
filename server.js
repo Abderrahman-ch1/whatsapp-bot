@@ -5,9 +5,31 @@ const path = require('path');
 const multer = require('multer');
 const cors = require('cors');
 const fs = require('fs');
+const crypto = require('crypto');
 const { spawnSync } = require('child_process');
 const db = require('./database');
 const bot = require('./bot');
+
+const AUTH_PASSWORD = process.env.AUTH_PASSWORD || null;
+// Stable token derived from password — survives restarts without a session store
+const SESSION_TOKEN = AUTH_PASSWORD
+  ? crypto.createHmac('sha256', AUTH_PASSWORD).update('wa-session-v1').digest('hex')
+  : null;
+
+function parseCookies(req) {
+  const out = {};
+  (req.headers.cookie || '').split(';').forEach(pair => {
+    const [k, ...v] = pair.trim().split('=');
+    if (k) out[k.trim()] = v.join('=').trim();
+  });
+  return out;
+}
+
+function requireAuth(req, res, next) {
+  if (!SESSION_TOKEN) return next();
+  if (parseCookies(req).wa_session === SESSION_TOKEN) return next();
+  res.status(401).json({ error: 'Unauthorized' });
+}
 
 function convertToOpusOgg(inputPath) {
   const outputPath = inputPath.replace(/\.[^.]+$/, '') + '_wa.ogg';
@@ -48,23 +70,44 @@ const makeStorage = (subdir) => multer.diskStorage({
 const uploadAudio  = multer({ storage: makeStorage('audio') });
 const uploadImages = multer({ storage: makeStorage('images') });
 
+// ── Auth ──────────────────────────────────────────────────
+app.get('/api/auth/check', (req, res) => {
+  if (!SESSION_TOKEN) return res.json({ ok: true });
+  if (parseCookies(req).wa_session === SESSION_TOKEN) return res.json({ ok: true });
+  res.status(401).json({ ok: false });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  if (!SESSION_TOKEN) return res.json({ ok: true });
+  if (req.body.password === AUTH_PASSWORD) {
+    res.setHeader('Set-Cookie', `wa_session=${SESSION_TOKEN}; HttpOnly; Path=/; Max-Age=2592000; SameSite=Strict`);
+    return res.json({ ok: true });
+  }
+  res.status(401).json({ error: 'Wrong password' });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.setHeader('Set-Cookie', 'wa_session=; HttpOnly; Path=/; Max-Age=0');
+  res.json({ ok: true });
+});
+
 // ── Status ────────────────────────────────────────────────
-app.get('/api/status', (req, res) => res.json(bot.getStatus()));
+app.get('/api/status', requireAuth, (req, res) => res.json(bot.getStatus()));
 
 // ── Conversations ─────────────────────────────────────────
-app.get('/api/conversations', (req, res) => res.json(db.getConversations()));
+app.get('/api/conversations', requireAuth, (req, res) => res.json(db.getConversations()));
 
-app.get('/api/conversations/:phone/messages', (req, res) =>
+app.get('/api/conversations/:phone/messages', requireAuth, (req, res) =>
   res.json(db.getMessages(req.params.phone))
 );
 
-app.post('/api/conversations/:phone/read', (req, res) => {
+app.post('/api/conversations/:phone/read', requireAuth, (req, res) => {
   db.markAsRead(req.params.phone);
   res.json({ success: true });
 });
 
 // ── Send message ──────────────────────────────────────────
-app.post('/api/send', async (req, res) => {
+app.post('/api/send', requireAuth, async (req, res) => {
   const { phone, text } = req.body;
   try {
     await bot.sendText(phone, text);
@@ -77,9 +120,9 @@ app.post('/api/send', async (req, res) => {
 });
 
 // ── Config ────────────────────────────────────────────────
-app.get('/api/config', (req, res) => res.json(db.getAllConfig()));
+app.get('/api/config', requireAuth, (req, res) => res.json(db.getAllConfig()));
 
-app.post('/api/config', (req, res) => {
+app.post('/api/config', requireAuth, (req, res) => {
   const { trigger_keyword, price_text, trigger_keyword_2, price_text_2 } = req.body;
   if (trigger_keyword   !== undefined) db.setConfig('trigger_keyword',   trigger_keyword);
   if (price_text        !== undefined) db.setConfig('price_text',        price_text);
@@ -89,7 +132,7 @@ app.post('/api/config', (req, res) => {
 });
 
 // ── Audio upload ──────────────────────────────────────────
-app.post('/api/upload/audio', uploadAudio.single('audio'), (req, res) => {
+app.post('/api/upload/audio', requireAuth, uploadAudio.single('audio'), (req, res) => {
   const sfx = req.query.slot === '2' ? '_2' : '';
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
@@ -104,7 +147,7 @@ app.post('/api/upload/audio', uploadAudio.single('audio'), (req, res) => {
   res.json({ success: true, path: convertedPath || req.file.path, name: req.file.originalname });
 });
 
-app.delete('/api/upload/audio', (req, res) => {
+app.delete('/api/upload/audio', requireAuth, (req, res) => {
   const sfx = req.query.slot === '2' ? '_2' : '';
   const p = db.getConfig(`audio_file${sfx}`);
   if (p && fs.existsSync(p)) fs.unlinkSync(p);
@@ -114,7 +157,7 @@ app.delete('/api/upload/audio', (req, res) => {
 });
 
 // ── Image upload ──────────────────────────────────────────
-app.post('/api/upload/images', uploadImages.array('images', 20), (req, res) => {
+app.post('/api/upload/images', requireAuth, uploadImages.array('images', 20), (req, res) => {
   const sfx = req.query.slot === '2' ? '_2' : '';
   if (!req.files?.length) return res.status(400).json({ error: 'No files uploaded' });
   const existing = JSON.parse(db.getConfig(`images${sfx}`) || '[]');
@@ -123,7 +166,7 @@ app.post('/api/upload/images', uploadImages.array('images', 20), (req, res) => {
   res.json({ success: true, files: newFiles });
 });
 
-app.delete('/api/upload/images/:filename', (req, res) => {
+app.delete('/api/upload/images/:filename', requireAuth, (req, res) => {
   const sfx = req.query.slot === '2' ? '_2' : '';
   const existing = JSON.parse(db.getConfig(`images${sfx}`) || '[]');
   const target = existing.find(f => f.path.includes(req.params.filename));

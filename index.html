@@ -592,9 +592,98 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
   .toast-wrap { bottom: 12px; right: 12px; left: 12px; }
   .toast { font-size: 12px; }
 }
+
+/* ── LOGIN SCREEN ── */
+#login-screen {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  align-items: center; justify-content: center;
+  background-image: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(34,197,94,.08) 0%, transparent 70%);
+}
+#login-screen.visible { display: flex; }
+
+.login-card {
+  width: 100%; max-width: 360px; padding: 40px 36px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  box-shadow: 0 24px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(34,197,94,.06);
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+}
+
+.login-logo { margin-bottom: 20px; }
+.login-logo svg { width: 52px; height: 52px; }
+
+.login-title {
+  font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700;
+  color: var(--t1); letter-spacing: -0.02em; margin-bottom: 6px;
+}
+
+.login-sub {
+  font-size: 13px; color: var(--t2); margin-bottom: 28px; text-align: center;
+}
+
+#login-form { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+
+.login-field input {
+  width: 100%; padding: 11px 14px;
+  background: var(--elevated); border: 1px solid var(--border-soft);
+  border-radius: var(--r); color: var(--t1); font-size: 14px; font-family: 'Outfit', sans-serif;
+  outline: none; transition: border-color .18s, box-shadow .18s;
+}
+.login-field input:focus {
+  border-color: var(--green); box-shadow: 0 0 0 3px var(--green-glow);
+}
+.login-field input::placeholder { color: var(--t3); }
+
+.login-error {
+  font-size: 12.5px; color: var(--red); min-height: 18px; text-align: center;
+}
+
+.login-btn {
+  width: 100%; padding: 12px;
+  background: var(--green); color: #fff; border: none; border-radius: var(--r);
+  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background .18s, transform .12s, box-shadow .18s;
+  box-shadow: 0 4px 20px rgba(34,197,94,.3);
+}
+.login-btn:hover { background: var(--green-dim); box-shadow: 0 4px 24px rgba(34,197,94,.45); }
+.login-btn:active { transform: scale(.97); }
+.login-btn:disabled { opacity: .6; cursor: not-allowed; }
 </style>
 </head>
 <body>
+
+<!-- ═══════════════════════════════ LOGIN SCREEN ═══════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 48 48" fill="none">
+        <rect width="48" height="48" rx="14" fill="rgba(34,197,94,.15)"/>
+        <path d="M24 10C16.268 10 10 16.268 10 24c0 2.553.666 4.952 1.832 7.024L10 38l7.198-1.808A13.92 13.92 0 0024 38c7.732 0 14-6.268 14-14S31.732 10 24 10z" fill="#22C55E"/>
+        <path d="M19 22.5v-1a1 1 0 011-1h1.5l1.5 1.5 1.5-1.5H26a1 1 0 011 1v1c0 .265-.105.52-.293.707l-2.5 2.5a1 1 0 01-1.414 0l-2.5-2.5A1 1 0 0119 22.5z" fill="white" opacity=".85"/>
+      </svg>
+    </div>
+    <h1 class="login-title">WA Automation</h1>
+    <p class="login-sub">Enter your password to continue</p>
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="login-field">
+        <input
+          id="login-password"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+      <div id="login-error" class="login-error"></div>
+      <button type="submit" class="login-btn" id="login-btn">
+        <span id="login-btn-text">Sign in</span>
+      </button>
+    </form>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════ CONNECT SCREEN ═══════════════════════════════ -->
 <div id="connect-screen">
@@ -658,6 +747,11 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         <button class="btn-settings-toggle" id="toggle-settings" title="Toggle settings">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
+        <button class="btn-settings-toggle" id="logout-btn" title="Log out" onclick="handleLogout()" style="margin-left:2px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
           </svg>
         </button>
       </div>
@@ -1544,9 +1638,53 @@ function mobileNav(view) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════════════
+async function handleLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  const password = document.getElementById('login-password').value;
+  btn.disabled = true;
+  document.getElementById('login-btn-text').textContent = 'Signing in…';
+  errEl.textContent = '';
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('login-screen').classList.remove('visible');
+      await init();
+    } else {
+      errEl.textContent = 'Wrong password. Try again.';
+    }
+  } catch {
+    errEl.textContent = 'Connection error. Try again.';
+  } finally {
+    btn.disabled = false;
+    document.getElementById('login-btn-text').textContent = 'Sign in';
+  }
+}
+
+async function handleLogout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════════
-init();
+(async () => {
+  const res = await fetch('/api/auth/check');
+  if (res.status === 401) {
+    document.getElementById('login-screen').classList.add('visible');
+    return;
+  }
+  await init();
+})();
 </script>
 </body>
 </html>
