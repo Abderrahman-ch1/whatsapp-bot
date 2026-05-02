@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1DB954"/>
+      <stop offset="100%" stop-color="#0E8A3A"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded square background -->
+  <rect width="32" height="32" rx="8" fill="url(#bg)"/>
+  <!-- Chat bubble shape -->
+  <path d="M6 8.5C6 7.12 7.12 6 8.5 6h15C24.88 6 26 7.12 26 8.5v11c0 1.38-1.12 2.5-2.5 2.5H18l-4 4-4-4H8.5C7.12 22 6 20.88 6 19.5v-11z" fill="white" opacity="0.95"/>
+  <!-- Lightning bolt (automation symbol) -->
+  <path d="M17.5 9.5l-4 6h3.5l-1.5 7 5.5-8h-3.5z" fill="#1DB954"/>
+</svg>
