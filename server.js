@@ -5,8 +5,26 @@ const path = require('path');
 const multer = require('multer');
 const cors = require('cors');
 const fs = require('fs');
+const { spawnSync } = require('child_process');
 const db = require('./database');
 const bot = require('./bot');
+
+function convertToOpusOgg(inputPath) {
+  const outputPath = inputPath.replace(/\.[^.]+$/, '') + '_wa.ogg';
+  const result = spawnSync('ffmpeg', [
+    '-i', inputPath,
+    '-c:a', 'libopus',
+    '-b:a', '32k',
+    '-ar', '16000',
+    '-ac', '1',
+    '-vn',
+    '-f', 'ogg',
+    outputPath, '-y'
+  ], { timeout: 30000 });
+  if (result.status === 0) return outputPath;
+  console.error('Upload-time audio conversion failed:', result.stderr?.toString().slice(-300));
+  return null;
+}
 
 const UPLOADS_DIR = process.env.DATA_DIR ? path.join(process.env.DATA_DIR, 'uploads') : path.join(__dirname, 'uploads');
 [path.join(UPLOADS_DIR, 'audio'), path.join(UPLOADS_DIR, 'images')].forEach(dir => {
@@ -74,9 +92,16 @@ app.post('/api/config', (req, res) => {
 app.post('/api/upload/audio', uploadAudio.single('audio'), (req, res) => {
   const sfx = req.query.slot === '2' ? '_2' : '';
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  db.setConfig(`audio_file${sfx}`, req.file.path);
+
+  const convertedPath = convertToOpusOgg(req.file.path);
+  if (convertedPath && fs.existsSync(convertedPath)) {
+    fs.unlinkSync(req.file.path);
+    db.setConfig(`audio_file${sfx}`, convertedPath);
+  } else {
+    db.setConfig(`audio_file${sfx}`, req.file.path);
+  }
   db.setConfig(`audio_name${sfx}`, req.file.originalname);
-  res.json({ success: true, path: req.file.path, name: req.file.originalname });
+  res.json({ success: true, path: convertedPath || req.file.path, name: req.file.originalname });
 });
 
 app.delete('/api/upload/audio', (req, res) => {
