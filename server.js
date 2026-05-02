@@ -10,12 +10,16 @@ const { spawnSync } = require('child_process');
 const db = require('./database');
 const bot = require('./bot');
 
-const AUTH_PASSWORD = process.env.AUTH_PASSWORD || null;
-const AUTH_USERNAME = process.env.AUTH_USERNAME || null;
-// Stable token derived from credentials — survives restarts without a session store
-const SESSION_TOKEN = AUTH_PASSWORD
-  ? crypto.createHmac('sha256', AUTH_PASSWORD).update(`wa-session-v1:${AUTH_USERNAME||''}`).digest('hex')
-  : null;
+// Credentials: DB values take priority over env vars (lets clients change their own password)
+function getCredentials() {
+  const username = db.getConfig('auth_username') || process.env.AUTH_USERNAME || null;
+  const password = db.getConfig('auth_password') || process.env.AUTH_PASSWORD || null;
+  return { username, password };
+}
+
+function makeToken(username, password) {
+  return crypto.createHmac('sha256', password).update(`wa-session-v1:${username||''}`).digest('hex');
+}
 
 function parseCookies(req) {
   const out = {};
@@ -27,8 +31,9 @@ function parseCookies(req) {
 }
 
 function requireAuth(req, res, next) {
-  if (!SESSION_TOKEN) return next();
-  if (parseCookies(req).wa_session === SESSION_TOKEN) return next();
+  const { password, username } = getCredentials();
+  if (!password) return next();
+  if (parseCookies(req).wa_session === makeToken(username, password)) return next();
   res.status(401).json({ error: 'Unauthorized' });
 }
 
@@ -73,17 +78,20 @@ const uploadImages = multer({ storage: makeStorage('images') });
 
 // ── Auth ──────────────────────────────────────────────────
 app.get('/api/auth/check', (req, res) => {
-  if (!SESSION_TOKEN) return res.json({ ok: true });
-  if (parseCookies(req).wa_session === SESSION_TOKEN) return res.json({ ok: true });
+  const { password, username } = getCredentials();
+  if (!password) return res.json({ ok: true });
+  if (parseCookies(req).wa_session === makeToken(username, password)) return res.json({ ok: true });
   res.status(401).json({ ok: false });
 });
 
 app.post('/api/auth/login', (req, res) => {
-  if (!SESSION_TOKEN) return res.json({ ok: true });
-  const usernameOk = !AUTH_USERNAME || req.body.username === AUTH_USERNAME;
-  const passwordOk = req.body.password === AUTH_PASSWORD;
+  const { password, username } = getCredentials();
+  if (!password) return res.json({ ok: true });
+  const usernameOk = !username || req.body.username === username;
+  const passwordOk = req.body.password === password;
   if (usernameOk && passwordOk) {
-    res.setHeader('Set-Cookie', `wa_session=${SESSION_TOKEN}; HttpOnly; Path=/; Max-Age=2592000; SameSite=Strict`);
+    const token = makeToken(username, password);
+    res.setHeader('Set-Cookie', `wa_session=${token}; HttpOnly; Path=/; Max-Age=2592000; SameSite=Strict`);
     return res.json({ ok: true });
   }
   res.status(401).json({ error: 'Wrong username or password' });
@@ -91,6 +99,26 @@ app.post('/api/auth/login', (req, res) => {
 
 app.post('/api/auth/logout', (req, res) => {
   res.setHeader('Set-Cookie', 'wa_session=; HttpOnly; Path=/; Max-Age=0');
+  res.json({ ok: true });
+});
+
+app.post('/api/auth/change', requireAuth, (req, res) => {
+  const { currentPassword, newUsername, newPassword } = req.body;
+  const { password } = getCredentials();
+  if (password && currentPassword !== password) {
+    return res.status(401).json({ error: 'Current password is incorrect' });
+  }
+  if (!newPassword || newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  }
+  if (!newUsername || !newUsername.trim()) {
+    return res.status(400).json({ error: 'Username cannot be empty' });
+  }
+  db.setConfig('auth_username', newUsername.trim());
+  db.setConfig('auth_password', newPassword);
+  // Issue a new session cookie with the updated credentials
+  const token = makeToken(newUsername.trim(), newPassword);
+  res.setHeader('Set-Cookie', `wa_session=${token}; HttpOnly; Path=/; Max-Age=2592000; SameSite=Strict`);
   res.json({ ok: true });
 });
 

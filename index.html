@@ -1014,6 +1014,39 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
       </div>
 
     </div>
+
+      <!-- Change Credentials -->
+      <div class="s-card">
+        <div class="s-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+          Change Login Credentials
+        </div>
+        <p class="hint">Update your username and password. You will stay logged in after saving.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label class="field-label">Current Password</label>
+            <input type="password" class="field-input" id="cred-current-pw" placeholder="Enter current password">
+          </div>
+          <div>
+            <label class="field-label">New Username</label>
+            <input type="text" class="field-input" id="cred-new-username" placeholder="New username">
+          </div>
+          <div>
+            <label class="field-label">New Password</label>
+            <input type="password" class="field-input" id="cred-new-pw" placeholder="Min. 6 characters">
+          </div>
+          <div>
+            <label class="field-label">Confirm New Password</label>
+            <input type="password" class="field-input" id="cred-confirm-pw" placeholder="Repeat new password">
+          </div>
+          <div id="cred-error" style="font-size:12.5px;color:var(--red);min-height:16px"></div>
+          <button class="btn-primary" id="save-cred-btn" onclick="changeCredentials()">Save New Credentials</button>
+        </div>
+      </div>
+
+    </div>
   </aside>
 </div>
 
@@ -1668,6 +1701,40 @@ function mobileNav(view) {
 // ═══════════════════════════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════════════════════════
+async function changeCredentials() {
+  const currentPassword = document.getElementById('cred-current-pw').value;
+  const newUsername     = document.getElementById('cred-new-username').value.trim();
+  const newPassword     = document.getElementById('cred-new-pw').value;
+  const confirmPassword = document.getElementById('cred-confirm-pw').value;
+  const errEl           = document.getElementById('cred-error');
+  const btn             = document.getElementById('save-cred-btn');
+  errEl.textContent = '';
+
+  if (!newUsername)                       return errEl.textContent = 'Username cannot be empty.';
+  if (newPassword.length < 6)             return errEl.textContent = 'Password must be at least 6 characters.';
+  if (newPassword !== confirmPassword)    return errEl.textContent = 'Passwords do not match.';
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    const res = await api('/api/auth/change', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newUsername, newPassword })
+    });
+    if (res.ok) {
+      toast('Credentials updated! Please log in again.', 'success');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      errEl.textContent = res.error || 'Failed to update credentials.';
+    }
+  } catch {
+    errEl.textContent = 'Connection error.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save New Credentials';
+  }
+}
+
 function togglePassword() {
   const input = document.getElementById('login-password');
   const isHidden = input.type === 'password';
