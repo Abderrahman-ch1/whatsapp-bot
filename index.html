@@ -1110,6 +1110,111 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 
     </div>
 
+      <!-- ── CAMPAIGN 3 DIVIDER ── -->
+      <div style="display:flex;align-items:center;gap:10px;padding:2px 0">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;white-space:nowrap">Campaign 3</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <!-- Trigger 3 -->
+      <div class="s-card">
+        <div class="s-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Trigger Keyword
+        </div>
+        <div>
+          <label class="field-label">Third keyword that triggers this campaign</label>
+          <input type="text" class="field-input" id="s-trigger-3" placeholder="e.g. Promo, Info, Details">
+        </div>
+        <p class="hint">Triggers only when Campaigns 1 & 2 keywords do not match. Leave empty to disable.</p>
+      </div>
+
+      <!-- Price text 3 -->
+      <div class="s-card">
+        <div class="s-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          Welcome Message / Prices
+        </div>
+        <div>
+          <label class="field-label">Text message sent before audio and images</label>
+          <textarea class="field-input" id="s-price-3" placeholder="Welcome! Here are our prices:&#10;&#10;Product A - $XX&#10;&#10;Check the images below 👇"></textarea>
+        </div>
+        <button class="btn-primary" id="save-config-btn-3">Save Campaign 3</button>
+      </div>
+
+      <!-- Audio 3 -->
+      <div class="s-card">
+        <div class="s-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/>
+          </svg>
+          Voice Message
+        </div>
+        <p class="hint">Upload your pre-recorded audio. It will be sent as a WhatsApp voice note.</p>
+        <div id="audio-preview-3" style="display:none">
+          <div class="audio-preview">
+            <button class="play-btn" id="preview-play-3">
+              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+            <span class="audio-name" id="audio-name-3">audio.mp3</span>
+            <button class="icon-btn danger" id="del-audio-3" title="Remove">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <audio id="audio-player-3"></audio>
+        </div>
+        <div class="upload-zone" id="audio-zone-3">
+          <input type="file" id="audio-input-3" accept="audio/*">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Click to upload audio or drag & drop<br>
+          <span style="font-size:11px;color:var(--t3)">MP3, OGG, M4A, WAV supported</span>
+        </div>
+        <div class="record-row">
+          <span style="font-size:11px;color:var(--t3)">or</span>
+          <button class="record-btn" id="record-btn-3" onclick="toggleRecording(3)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/><line x1="9" y1="21" x2="15" y2="21" stroke="currentColor" stroke-width="2"/></svg>
+            Record voice note
+          </button>
+          <span class="record-timer" id="record-timer-3" style="display:none">
+            <span class="record-dot"></span><span id="record-time-3">0:00</span>
+          </span>
+          <button class="record-stop-btn" id="record-stop-btn-3" style="display:none" onclick="stopRecording(3)">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            Stop
+          </button>
+        </div>
+      </div>
+
+      <!-- Images 3 -->
+      <div class="s-card">
+        <div class="s-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          Product Images
+        </div>
+        <p class="hint">These images are sent after the audio. Max 20 images.</p>
+        <div class="images-grid" id="images-grid-3"></div>
+        <div class="upload-zone" id="images-zone-3">
+          <input type="file" id="images-input-3" accept="image/*" multiple>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Click to upload images or drag & drop<br>
+          <span style="font-size:11px;color:var(--t3)">JPG, PNG, WEBP supported</span>
+        </div>
+      </div>
+
       <!-- Reminder Message -->
       <div class="s-card">
         <div class="s-card-title">
@@ -1124,6 +1229,10 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
           <textarea class="field-input" id="s-reminder" rows="3" placeholder="مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف"></textarea>
         </div>
         <button class="btn-primary" id="save-reminder-btn">Save Reminder</button>
+        <div id="reminder-preview" style="display:none;margin-top:10px;padding:11px 13px;background:var(--elevated);border:1px solid var(--border);border-radius:var(--r);border-left:3px solid var(--amber)">
+          <div style="font-size:10px;font-weight:600;color:var(--amber);letter-spacing:.06em;margin-bottom:6px">⏰ WILL SEND AFTER 15 MIN</div>
+          <div id="reminder-preview-text" style="font-size:13px;color:var(--t1);line-height:1.5;direction:rtl;text-align:right"></div>
+        </div>
       </div>
 
     </div>
@@ -1584,7 +1693,14 @@ async function loadConfig() {
   if (cfg.audio_file_2 && cfg.audio_name_2) showAudioPreview(cfg.audio_name_2, cfg.audio_file_2, 2);
   if (cfg.images_2) { try { renderImageGrid(JSON.parse(cfg.images_2), 2); } catch {} }
 
-  document.getElementById('s-reminder').value = cfg.reminder_text || 'مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف';
+  if (cfg.trigger_keyword_3) document.getElementById('s-trigger-3').value = cfg.trigger_keyword_3;
+  if (cfg.price_text_3)      document.getElementById('s-price-3').value   = cfg.price_text_3;
+  if (cfg.audio_file_3 && cfg.audio_name_3) showAudioPreview(cfg.audio_name_3, cfg.audio_file_3, 3);
+  if (cfg.images_3) { try { renderImageGrid(JSON.parse(cfg.images_3), 3); } catch {} }
+
+  const reminderText = cfg.reminder_text || 'مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف';
+  document.getElementById('s-reminder').value = reminderText;
+  showReminderPreview(reminderText);
 }
 
 document.getElementById('save-config-btn').addEventListener('click', async () => {
@@ -1682,7 +1798,7 @@ function setRecordingUI(slot, isRecording) {
 async function uploadAudio(file, slot = 1) {
   const fd = new FormData();
   fd.append('audio', file);
-  const url = slot === 2 ? '/api/upload/audio?slot=2' : '/api/upload/audio';
+  const url = slot === 1 ? '/api/upload/audio' : `/api/upload/audio?slot=${slot}`;
   const res = await fetch(url, { method: 'POST', body: fd });
   const data = await res.json();
   if (data.success) {
@@ -1692,7 +1808,7 @@ async function uploadAudio(file, slot = 1) {
 }
 
 function showAudioPreview(name, path, slot = 1) {
-  const s = slot === 2 ? '-2' : '';
+  const s = slot === 1 ? '' : `-${slot}`;
   document.getElementById(`audio-name${s}`).textContent = name;
   document.getElementById(`audio-player${s}`).src = filePathToUrl(path);
   document.getElementById(`audio-preview${s}`).style.display = 'block';
@@ -1730,16 +1846,16 @@ imagesInput.addEventListener('change', () => {
   if (imagesInput.files.length) uploadImages(imagesInput.files);
 });
 
-const currentImages = { 1: [], 2: [] };
+const currentImages = { 1: [], 2: [], 3: [] };
 
 async function uploadImages(files, slot = 1) {
   const fd = new FormData();
   for (const f of files) fd.append('images', f);
-  const url = slot === 2 ? '/api/upload/images?slot=2' : '/api/upload/images';
+  const url = slot === 1 ? '/api/upload/images' : `/api/upload/images?slot=${slot}`;
   const res = await fetch(url, { method: 'POST', body: fd });
   const data = await res.json();
   if (data.success) {
-    currentImages[slot] = [...currentImages[slot], ...data.files];
+    currentImages[slot] = [...(currentImages[slot] || []), ...data.files];
     renderImageGrid(currentImages[slot], slot);
     toast(`${data.files.length} image${data.files.length > 1 ? 's' : ''} uploaded!`, 'success');
   }
@@ -1753,7 +1869,7 @@ function filePathToUrl(p) {
 
 function renderImageGrid(images, slot = 1) {
   currentImages[slot] = images;
-  const s = slot === 2 ? '-2' : '';
+  const s = slot === 1 ? '' : `-${slot}`;
   const grid = document.getElementById(`images-grid${s}`);
   grid.innerHTML = images.map((img, i) => {
     const p = img.path || img;
@@ -1767,7 +1883,7 @@ function renderImageGrid(images, slot = 1) {
 }
 
 async function deleteImage(filename, slot = 1) {
-  const qp = slot === 2 ? '?slot=2' : '';
+  const qp = slot === 1 ? '' : `?slot=${slot}`;
   await api(`/api/upload/images/${filename}${qp}`, 'DELETE');
   currentImages[slot] = currentImages[slot].filter(img => !(img.path || img).includes(filename));
   renderImageGrid(currentImages[slot], slot);
@@ -1898,10 +2014,28 @@ document.getElementById('save-config-btn-2').addEventListener('click', async () 
   toast('Campaign 2 saved!', 'success');
 });
 
+function showReminderPreview(text) {
+  const preview = document.getElementById('reminder-preview');
+  if (text) {
+    document.getElementById('reminder-preview-text').textContent = text;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
 document.getElementById('save-reminder-btn').addEventListener('click', async () => {
   const reminder_text = document.getElementById('s-reminder').value.trim();
   await api('/api/config', 'POST', { reminder_text });
+  showReminderPreview(reminder_text);
   toast('Reminder saved!', 'success');
+});
+
+document.getElementById('save-config-btn-3').addEventListener('click', async () => {
+  const trigger_keyword_3 = document.getElementById('s-trigger-3').value.trim();
+  const price_text_3      = document.getElementById('s-price-3').value.trim();
+  await api('/api/config', 'POST', { trigger_keyword_3, price_text_3 });
+  toast('Campaign 3 saved!', 'success');
 });
 
 // ── Campaign 2 audio ──────────────────────────────────────────
@@ -1942,6 +2076,43 @@ imagesZone2.addEventListener('drop', (e) => {
 });
 imagesInput2.addEventListener('change', () => {
   if (imagesInput2.files.length) uploadImages(imagesInput2.files, 2);
+});
+
+// ── Campaign 3 audio ──────────────────────────────────────────
+const audioZone3  = document.getElementById('audio-zone-3');
+const audioInput3 = document.getElementById('audio-input-3');
+audioZone3.addEventListener('click', () => audioInput3.click());
+audioZone3.addEventListener('dragover',  (e) => { e.preventDefault(); audioZone3.classList.add('drag'); });
+audioZone3.addEventListener('dragleave', ()  => audioZone3.classList.remove('drag'));
+audioZone3.addEventListener('drop', (e) => {
+  e.preventDefault(); audioZone3.classList.remove('drag');
+  if (e.dataTransfer.files[0]) uploadAudio(e.dataTransfer.files[0], 3);
+});
+audioInput3.addEventListener('change', () => {
+  if (audioInput3.files[0]) uploadAudio(audioInput3.files[0], 3);
+});
+document.getElementById('preview-play-3').addEventListener('click', () => {
+  const p = document.getElementById('audio-player-3');
+  p.paused ? p.play() : p.pause();
+});
+document.getElementById('del-audio-3').addEventListener('click', async () => {
+  await fetch('/api/upload/audio?slot=3', { method: 'DELETE' });
+  document.getElementById('audio-preview-3').style.display = 'none';
+  document.getElementById('audio-zone-3').style.display = '';
+});
+
+// ── Campaign 3 images ─────────────────────────────────────────
+const imagesZone3  = document.getElementById('images-zone-3');
+const imagesInput3 = document.getElementById('images-input-3');
+imagesZone3.addEventListener('click', () => imagesInput3.click());
+imagesZone3.addEventListener('dragover',  (e) => { e.preventDefault(); imagesZone3.classList.add('drag'); });
+imagesZone3.addEventListener('dragleave', ()  => imagesZone3.classList.remove('drag'));
+imagesZone3.addEventListener('drop', (e) => {
+  e.preventDefault(); imagesZone3.classList.remove('drag');
+  if (e.dataTransfer.files.length) uploadImages(e.dataTransfer.files, 3);
+});
+imagesInput3.addEventListener('change', () => {
+  if (imagesInput3.files.length) uploadImages(imagesInput3.files, 3);
 });
 
 // ═══════════════════════════════════════════════════════════════

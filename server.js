@@ -154,18 +154,20 @@ app.post('/api/send', requireAuth, async (req, res) => {
 app.get('/api/config', requireAuth, (req, res) => res.json(db.getAllConfig()));
 
 app.post('/api/config', requireAuth, (req, res) => {
-  const { trigger_keyword, price_text, trigger_keyword_2, price_text_2, reminder_text } = req.body;
+  const { trigger_keyword, price_text, trigger_keyword_2, price_text_2, trigger_keyword_3, price_text_3, reminder_text } = req.body;
   if (trigger_keyword   !== undefined) db.setConfig('trigger_keyword',   trigger_keyword);
   if (price_text        !== undefined) db.setConfig('price_text',        price_text);
   if (trigger_keyword_2 !== undefined) db.setConfig('trigger_keyword_2', trigger_keyword_2);
   if (price_text_2      !== undefined) db.setConfig('price_text_2',      price_text_2);
+  if (trigger_keyword_3 !== undefined) db.setConfig('trigger_keyword_3', trigger_keyword_3);
+  if (price_text_3      !== undefined) db.setConfig('price_text_3',      price_text_3);
   if (reminder_text     !== undefined) db.setConfig('reminder_text',     reminder_text);
   res.json({ success: true });
 });
 
 // ── Audio upload ──────────────────────────────────────────
 app.post('/api/upload/audio', requireAuth, uploadAudio.single('audio'), (req, res) => {
-  const sfx = req.query.slot === '2' ? '_2' : '';
+  const sfx = req.query.slot === '2' ? '_2' : req.query.slot === '3' ? '_3' : '';
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
   const convertedPath = convertToOpusOgg(req.file.path);
@@ -180,7 +182,7 @@ app.post('/api/upload/audio', requireAuth, uploadAudio.single('audio'), (req, re
 });
 
 app.delete('/api/upload/audio', requireAuth, (req, res) => {
-  const sfx = req.query.slot === '2' ? '_2' : '';
+  const sfx = req.query.slot === '2' ? '_2' : req.query.slot === '3' ? '_3' : '';
   const p = db.getConfig(`audio_file${sfx}`);
   if (p && fs.existsSync(p)) fs.unlinkSync(p);
   db.setConfig(`audio_file${sfx}`, '');
@@ -190,7 +192,7 @@ app.delete('/api/upload/audio', requireAuth, (req, res) => {
 
 // ── Image upload ──────────────────────────────────────────
 app.post('/api/upload/images', requireAuth, uploadImages.array('images', 20), (req, res) => {
-  const sfx = req.query.slot === '2' ? '_2' : '';
+  const sfx = req.query.slot === '2' ? '_2' : req.query.slot === '3' ? '_3' : '';
   if (!req.files?.length) return res.status(400).json({ error: 'No files uploaded' });
   const existing = JSON.parse(db.getConfig(`images${sfx}`) || '[]');
   const newFiles = req.files.map(f => ({ path: f.path, name: f.originalname }));
@@ -199,7 +201,7 @@ app.post('/api/upload/images', requireAuth, uploadImages.array('images', 20), (r
 });
 
 app.delete('/api/upload/images/:filename', requireAuth, (req, res) => {
-  const sfx = req.query.slot === '2' ? '_2' : '';
+  const sfx = req.query.slot === '2' ? '_2' : req.query.slot === '3' ? '_3' : '';
   const existing = JSON.parse(db.getConfig(`images${sfx}`) || '[]');
   const target = existing.find(f => f.path.includes(req.params.filename));
   if (target && fs.existsSync(target.path)) fs.unlinkSync(target.path);
