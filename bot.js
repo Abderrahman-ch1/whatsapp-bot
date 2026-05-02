@@ -1,5 +1,5 @@
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -12,15 +12,20 @@ const DATA_DIR = process.env.DATA_DIR || '.';
 
 function convertToOpus(inputPath) {
   const outputPath = inputPath + '_wa.ogg';
-  try {
-    execSync(`ffmpeg -i "${inputPath}" -c:a libopus -b:a 64k -vn "${outputPath}" -y`, {
-      timeout: 30000, stdio: 'pipe'
-    });
-    return outputPath;
-  } catch (e) {
-    console.error('Audio conversion failed, sending original:', e.message);
-    return null;
-  }
+  // WhatsApp voice notes: OGG container, OPUS codec, mono 16 kHz — same as WA native recordings
+  const result = spawnSync('ffmpeg', [
+    '-i', inputPath,
+    '-c:a', 'libopus',
+    '-b:a', '32k',
+    '-ar', '16000',
+    '-ac', '1',
+    '-vn',
+    '-f', 'ogg',
+    outputPath, '-y'
+  ], { timeout: 30000 });
+  if (result.status === 0) return outputPath;
+  console.error('Audio conversion failed:', result.stderr?.toString().slice(-200));
+  return null;
 }
 
 // Delete stale Chrome user data dirs on startup — LocalAuth restores WA session from its zip backup.
@@ -139,9 +144,15 @@ async function sendBotResponse(chatId, phone, db, io, sfx = '') {
     const audioPath = db.getConfig(`audio_file${sfx}`);
     if (audioPath && fs.existsSync(audioPath)) {
       const convertedPath = convertToOpus(audioPath);
-      const sendPath = convertedPath || audioPath;
       try {
-        const media = MessageMedia.fromFilePath(sendPath);
+        let media;
+        if (convertedPath && fs.existsSync(convertedPath)) {
+          // Explicit MIME type so WhatsApp treats it as a native voice note on all devices
+          const data = fs.readFileSync(convertedPath).toString('base64');
+          media = new MessageMedia('audio/ogg; codecs=opus', data, 'voice.ogg');
+        } else {
+          media = MessageMedia.fromFilePath(audioPath);
+        }
         await client.sendMessage(chatId, media, { sendAudioAsVoice: true });
         const m = db.saveMessage(phone, 'out', 'audio', '🎵 Voice message', audioPath, true);
         io.emit('new_message', { phone, ...m });
