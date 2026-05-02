@@ -1110,6 +1110,22 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 
     </div>
 
+      <!-- Reminder Message -->
+      <div class="s-card">
+        <div class="s-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+          </svg>
+          Follow-up Reminder
+        </div>
+        <p class="hint">Sent automatically 15 minutes after the bot campaign if the client hasn't replied.</p>
+        <div>
+          <label class="field-label">Reminder message</label>
+          <textarea class="field-input" id="s-reminder" rows="3" placeholder="مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف"></textarea>
+        </div>
+        <button class="btn-primary" id="save-reminder-btn">Save Reminder</button>
+      </div>
+
     </div>
   </aside>
 </div>
@@ -1567,6 +1583,8 @@ async function loadConfig() {
   if (cfg.price_text_2)      document.getElementById('s-price-2').value   = cfg.price_text_2;
   if (cfg.audio_file_2 && cfg.audio_name_2) showAudioPreview(cfg.audio_name_2, cfg.audio_file_2, 2);
   if (cfg.images_2) { try { renderImageGrid(JSON.parse(cfg.images_2), 2); } catch {} }
+
+  document.getElementById('s-reminder').value = cfg.reminder_text || 'مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف';
 }
 
 document.getElementById('save-config-btn').addEventListener('click', async () => {
@@ -1878,6 +1896,12 @@ document.getElementById('save-config-btn-2').addEventListener('click', async () 
   const price_text_2      = document.getElementById('s-price-2').value.trim();
   await api('/api/config', 'POST', { trigger_keyword_2, price_text_2 });
   toast('Campaign 2 saved!', 'success');
+});
+
+document.getElementById('save-reminder-btn').addEventListener('click', async () => {
+  const reminder_text = document.getElementById('s-reminder').value.trim();
+  await api('/api/config', 'POST', { reminder_text });
+  toast('Reminder saved!', 'success');
 });
 
 // ── Campaign 2 audio ──────────────────────────────────────────

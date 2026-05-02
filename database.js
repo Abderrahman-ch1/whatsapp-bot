@@ -7,8 +7,9 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const db = new Database(path.join(DATA_DIR, 'app.db'));
 
-// Safe migration for existing databases
+// Safe migrations for existing databases
 try { db.exec('ALTER TABLE contacts ADD COLUMN unread INTEGER DEFAULT 0'); } catch {}
+try { db.exec('ALTER TABLE contacts ADD COLUMN reminder_sent INTEGER DEFAULT 0'); } catch {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS contacts (
@@ -93,6 +94,17 @@ function markAsRead(phone) {
   db.prepare('UPDATE contacts SET unread = 0 WHERE phone = ?').run(phone);
 }
 
+function markReminderSent(phone) {
+  db.prepare('UPDATE contacts SET reminder_sent = 1 WHERE phone = ?').run(phone);
+}
+
+function shouldSendReminder(phone) {
+  const contact = db.prepare('SELECT reminder_sent FROM contacts WHERE phone = ?').get(phone);
+  if (!contact || contact.reminder_sent === 1) return false;
+  const lastMsg = db.prepare('SELECT direction FROM messages WHERE phone = ? ORDER BY created_at DESC LIMIT 1').get(phone);
+  return lastMsg && lastMsg.direction === 'out';
+}
+
 function getConfig(key) {
   const row = db.prepare('SELECT value FROM config WHERE key = ?').get(key);
   return row?.value || null;
@@ -115,5 +127,6 @@ function setConfig(key, value) {
 module.exports = {
   upsertContact, getConversations, getMessages,
   saveMessage, isContactBotHandled, markBotHandled, markAsRead,
+  markReminderSent, shouldSendReminder,
   getConfig, getAllConfig, setConfig
 };

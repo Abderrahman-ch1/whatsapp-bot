@@ -154,11 +154,12 @@ app.post('/api/send', requireAuth, async (req, res) => {
 app.get('/api/config', requireAuth, (req, res) => res.json(db.getAllConfig()));
 
 app.post('/api/config', requireAuth, (req, res) => {
-  const { trigger_keyword, price_text, trigger_keyword_2, price_text_2 } = req.body;
+  const { trigger_keyword, price_text, trigger_keyword_2, price_text_2, reminder_text } = req.body;
   if (trigger_keyword   !== undefined) db.setConfig('trigger_keyword',   trigger_keyword);
   if (price_text        !== undefined) db.setConfig('price_text',        price_text);
   if (trigger_keyword_2 !== undefined) db.setConfig('trigger_keyword_2', trigger_keyword_2);
   if (price_text_2      !== undefined) db.setConfig('price_text_2',      price_text_2);
+  if (reminder_text     !== undefined) db.setConfig('reminder_text',     reminder_text);
   res.json({ success: true });
 });
 

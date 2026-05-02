@@ -149,6 +149,23 @@ async function sendBotResponse(chatId, phone, db, io, sfx = '') {
 
     db.markBotHandled(phone);
     console.log(`🤖 Bot response sent to ${phone} (campaign${sfx || '1'})`);
+
+    // Schedule 15-minute follow-up reminder if client doesn't reply
+    const REMINDER_DEFAULT = 'مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف';
+    setTimeout(async () => {
+      try {
+        if (!db.shouldSendReminder(phone)) return;
+        const reminderText = db.getConfig('reminder_text') || REMINDER_DEFAULT;
+        await client.sendMessage(chatId, reminderText);
+        const m = db.saveMessage(phone, 'out', 'text', reminderText, null, true);
+        io.emit('new_message', { phone, ...m });
+        db.markReminderSent(phone);
+        console.log(`⏰ Reminder sent to ${phone}`);
+      } catch (err) {
+        console.error('Reminder error:', err.message);
+      }
+    }, 15 * 60 * 1000);
+
   } catch (err) {
     console.error('Bot error:', err.message);
   }
@@ -157,7 +174,12 @@ async function sendBotResponse(chatId, phone, db, io, sfx = '') {
 async function sendText(phone, text) {
   if (!client || !isConnected) throw new Error('WhatsApp not connected');
   const chatId = phone.includes('@c.us') ? phone : `${phone}@c.us`;
-  await client.sendMessage(chatId, text);
+  try {
+    const chat = await client.getChatById(chatId);
+    await chat.sendMessage(text);
+  } catch {
+    await client.sendMessage(chatId, text);
+  }
 }
 
 function getStatus() {
