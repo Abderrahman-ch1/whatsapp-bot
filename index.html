@@ -1239,11 +1239,23 @@ socket.on('new_message', (msg) => {
   }
   renderConvList();
 
-  // If this is the active chat, append message
+  // If this is the active chat, append message (skip if already shown optimistically)
   if (msg.phone === state.activePhone) {
-    state.messages.push(msg);
-    appendMessage(msg);
-    scrollToBottom();
+    const alreadyShown = msg.direction === 'out' &&
+      state.messages.some(m => String(m.id).startsWith('tmp_') && m.content === msg.content);
+    if (alreadyShown) {
+      // Replace the temp message id with the real one so future lookups work
+      const tmp = state.messages.find(m => String(m.id).startsWith('tmp_') && m.content === msg.content);
+      if (tmp) {
+        const el = document.querySelector(`[data-msgid="${tmp.id}"]`);
+        if (el) el.setAttribute('data-msgid', msg.id);
+        tmp.id = msg.id;
+      }
+    } else {
+      state.messages.push(msg);
+      appendMessage(msg);
+      scrollToBottom();
+    }
   }
 });
 
@@ -1473,7 +1485,7 @@ function buildMsgHTML(msg) {
     content = `<div style="padding:9px 13px">${escHtml(msg.content || '')}</div>`;
   }
 
-  return `<div class="msg ${dir}">
+  return `<div class="msg ${dir}" data-msgid="${msg.id}">
     <div class="msg-bubble" style="padding:0">
       ${content}
       <div class="msg-meta" style="padding:0 10px 7px">
@@ -1509,10 +1521,35 @@ async function sendMessage() {
   input.value = '';
   input.style.height = 'auto';
 
+  // Show message immediately in the UI
+  const optimistic = {
+    id: 'tmp_' + Date.now(),
+    phone: state.activePhone, direction: 'out', type: 'text',
+    content: text, bot: 0, created_at: new Date().toISOString()
+  };
+  state.messages.push(optimistic);
+  appendMessage(optimistic);
+  scrollToBottom();
+
   try {
-    await api('/api/send', 'POST', { phone: state.activePhone, text });
-  } catch (err) {
-    toast('Failed to send message', 'error');
+    const res = await fetch('/api/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: state.activePhone, text })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      // Remove optimistic message and show error
+      state.messages = state.messages.filter(m => m.id !== optimistic.id);
+      document.querySelector(`[data-msgid="${optimistic.id}"]`)?.remove();
+      toast(data.error || 'Failed to send — is WhatsApp connected?', 'error');
+      input.value = text;
+    }
+  } catch {
+    state.messages = state.messages.filter(m => m.id !== optimistic.id);
+    document.querySelector(`[data-msgid="${optimistic.id}"]`)?.remove();
+    toast('Network error — message not sent', 'error');
+    input.value = text;
   }
 }
 
