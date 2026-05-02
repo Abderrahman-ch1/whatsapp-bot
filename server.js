@@ -11,9 +11,10 @@ const db = require('./database');
 const bot = require('./bot');
 
 const AUTH_PASSWORD = process.env.AUTH_PASSWORD || null;
-// Stable token derived from password — survives restarts without a session store
+const AUTH_USERNAME = process.env.AUTH_USERNAME || null;
+// Stable token derived from credentials — survives restarts without a session store
 const SESSION_TOKEN = AUTH_PASSWORD
-  ? crypto.createHmac('sha256', AUTH_PASSWORD).update('wa-session-v1').digest('hex')
+  ? crypto.createHmac('sha256', AUTH_PASSWORD).update(`wa-session-v1:${AUTH_USERNAME||''}`).digest('hex')
   : null;
 
 function parseCookies(req) {
@@ -79,11 +80,13 @@ app.get('/api/auth/check', (req, res) => {
 
 app.post('/api/auth/login', (req, res) => {
   if (!SESSION_TOKEN) return res.json({ ok: true });
-  if (req.body.password === AUTH_PASSWORD) {
+  const usernameOk = !AUTH_USERNAME || req.body.username === AUTH_USERNAME;
+  const passwordOk = req.body.password === AUTH_PASSWORD;
+  if (usernameOk && passwordOk) {
     res.setHeader('Set-Cookie', `wa_session=${SESSION_TOKEN}; HttpOnly; Path=/; Max-Age=2592000; SameSite=Strict`);
     return res.json({ ok: true });
   }
-  res.status(401).json({ error: 'Wrong password' });
+  res.status(401).json({ error: 'Wrong username or password' });
 });
 
 app.post('/api/auth/logout', (req, res) => {

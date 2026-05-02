@@ -637,6 +637,15 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 }
 .login-field input::placeholder { color: var(--t3); }
 
+.login-field-pw { position: relative; }
+.login-field-pw input { padding-right: 42px; }
+.show-pw-btn {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--t3); cursor: pointer; padding: 4px;
+  display: flex; align-items: center; transition: color .15s;
+}
+.show-pw-btn:hover { color: var(--t1); }
+
 .login-error {
   font-size: 12.5px; color: var(--red); min-height: 18px; text-align: center;
 }
@@ -666,9 +675,18 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
       </svg>
     </div>
     <h1 class="login-title">WA Automation</h1>
-    <p class="login-sub">Enter your password to continue</p>
+    <p class="login-sub">Sign in to your dashboard</p>
     <form id="login-form" onsubmit="handleLogin(event)">
       <div class="login-field">
+        <input
+          id="login-username"
+          type="text"
+          placeholder="Username"
+          autocomplete="username"
+          required
+        />
+      </div>
+      <div class="login-field login-field-pw">
         <input
           id="login-password"
           type="password"
@@ -676,6 +694,16 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
           autocomplete="current-password"
           required
         />
+        <button type="button" class="show-pw-btn" onclick="togglePassword()" tabindex="-1" title="Show password">
+          <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <svg id="eye-off-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+            <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </button>
       </div>
       <div id="login-error" class="login-error"></div>
       <button type="submit" class="login-btn" id="login-btn">
@@ -1640,10 +1668,19 @@ function mobileNav(view) {
 // ═══════════════════════════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════════════════════════
+function togglePassword() {
+  const input = document.getElementById('login-password');
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  document.getElementById('eye-icon').style.display = isHidden ? 'none' : '';
+  document.getElementById('eye-off-icon').style.display = isHidden ? '' : 'none';
+}
+
 async function handleLogin(e) {
   e.preventDefault();
   const btn = document.getElementById('login-btn');
   const errEl = document.getElementById('login-error');
+  const username = document.getElementById('login-username').value;
   const password = document.getElementById('login-password').value;
   btn.disabled = true;
   document.getElementById('login-btn-text').textContent = 'Signing in…';
@@ -1652,14 +1689,14 @@ async function handleLogin(e) {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password })
+      body: JSON.stringify({ username, password })
     });
     const data = await res.json();
     if (data.ok) {
       document.getElementById('login-screen').classList.remove('visible');
       await init();
     } else {
-      errEl.textContent = 'Wrong password. Try again.';
+      errEl.textContent = data.error || 'Wrong username or password.';
     }
   } catch {
     errEl.textContent = 'Connection error. Try again.';
