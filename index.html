@@ -491,6 +491,31 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 }
 .btn-danger:hover { background: rgba(239,68,68,.1); }
 
+.btn-add-campaign {
+  width: 100%; padding: 9px; border-radius: var(--rs);
+  background: transparent; border: 1px dashed var(--border);
+  cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+  color: var(--t2); display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.btn-add-campaign:hover { border-color: var(--green); color: var(--green); background: rgba(34,197,94,.05); }
+.btn-add-campaign:disabled { opacity: .4; cursor: not-allowed; }
+
+.campaign-divider {
+  display: flex; align-items: center; gap: 10px; padding: 2px 0;
+}
+.campaign-divider-line { flex: 1; height: 1px; background: var(--border); }
+.campaign-divider-label {
+  font-size: 10px; font-weight: 600; letter-spacing: .1em; color: var(--t3);
+  text-transform: uppercase; white-space: nowrap;
+}
+.campaign-remove-btn {
+  background: none; border: none; color: var(--t3); cursor: pointer;
+  padding: 2px 5px; border-radius: 4px; font-size: 16px; line-height: 1;
+  transition: color .15s, background .15s;
+}
+.campaign-remove-btn:hover { color: var(--red); background: rgba(239,68,68,.1); }
+
 /* Upload zone */
 .upload-zone {
   border: 2px dashed var(--border); border-radius: var(--r);
@@ -1003,217 +1028,16 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         </div>
       </div>
 
-      <!-- ── CAMPAIGN 2 DIVIDER ── -->
-      <div style="display:flex;align-items:center;gap:10px;padding:2px 0">
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;white-space:nowrap">Campaign 2</span>
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-      </div>
+      <!-- ── DYNAMIC CAMPAIGNS ── -->
+      <div id="campaigns-container"></div>
 
-      <!-- Trigger 2 -->
-      <div class="s-card">
-        <div class="s-card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-          Trigger Keyword
-        </div>
-        <div>
-          <label class="field-label">Second keyword that triggers this campaign</label>
-          <input type="text" class="field-input" id="s-trigger-2" placeholder="e.g. Order, Buy, Wholesale">
-        </div>
-        <p class="hint">Triggers only when Campaign 1 keyword does not match. Leave empty to disable.</p>
-      </div>
-
-      <!-- Price text 2 -->
-      <div class="s-card">
-        <div class="s-card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-          </svg>
-          Welcome Message / Prices
-        </div>
-        <div>
-          <label class="field-label">Text message sent before audio and images</label>
-          <textarea class="field-input" id="s-price-2" placeholder="Welcome! Here are our prices:&#10;&#10;Product A - $XX&#10;&#10;Check the images below 👇"></textarea>
-        </div>
-        <button class="btn-primary" id="save-config-btn-2">Save Campaign 2</button>
-      </div>
-
-      <!-- Audio 2 -->
-      <div class="s-card">
-        <div class="s-card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/>
-          </svg>
-          Voice Message
-        </div>
-        <p class="hint">Upload your pre-recorded audio. It will be sent as a WhatsApp voice note.</p>
-        <div id="audio-preview-2" style="display:none">
-          <div class="audio-preview">
-            <button class="play-btn" id="preview-play-2">
-              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            </button>
-            <span class="audio-name" id="audio-name-2">audio.mp3</span>
-            <button class="icon-btn danger" id="del-audio-2" title="Remove">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          </div>
-          <audio id="audio-player-2"></audio>
-        </div>
-        <div class="upload-zone" id="audio-zone-2">
-          <input type="file" id="audio-input-2" accept="audio/*">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          Click to upload audio or drag & drop<br>
-          <span style="font-size:11px;color:var(--t3)">MP3, OGG, M4A, WAV supported</span>
-        </div>
-        <div class="record-row">
-          <span style="font-size:11px;color:var(--t3)">or</span>
-          <button class="record-btn" id="record-btn-2" onclick="toggleRecording(2)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/><line x1="9" y1="21" x2="15" y2="21" stroke="currentColor" stroke-width="2"/></svg>
-            Record voice note
-          </button>
-          <span class="record-timer" id="record-timer-2" style="display:none">
-            <span class="record-dot"></span><span id="record-time-2">0:00</span>
-          </span>
-          <button class="record-stop-btn" id="record-stop-btn-2" style="display:none" onclick="stopRecording(2)">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-            Stop
-          </button>
-        </div>
-      </div>
-
-      <!-- Images 2 -->
-      <div class="s-card">
-        <div class="s-card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          Product Images
-        </div>
-        <p class="hint">These images are sent after the audio. Max 20 images.</p>
-        <div class="images-grid" id="images-grid-2"></div>
-        <div class="upload-zone" id="images-zone-2">
-          <input type="file" id="images-input-2" accept="image/*" multiple>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          Click to upload images or drag & drop<br>
-          <span style="font-size:11px;color:var(--t3)">JPG, PNG, WEBP supported</span>
-        </div>
-      </div>
-
-    </div>
-
-      <!-- ── CAMPAIGN 3 DIVIDER ── -->
-      <div style="display:flex;align-items:center;gap:10px;padding:2px 0">
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--t3);text-transform:uppercase;white-space:nowrap">Campaign 3</span>
-        <div style="flex:1;height:1px;background:var(--border)"></div>
-      </div>
-
-      <!-- Trigger 3 -->
-      <div class="s-card">
-        <div class="s-card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-          Trigger Keyword
-        </div>
-        <div>
-          <label class="field-label">Third keyword that triggers this campaign</label>
-          <input type="text" class="field-input" id="s-trigger-3" placeholder="e.g. Promo, Info, Details">
-        </div>
-        <p class="hint">Triggers only when Campaigns 1 & 2 keywords do not match. Leave empty to disable.</p>
-      </div>
-
-      <!-- Price text 3 -->
-      <div class="s-card">
-        <div class="s-card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-          </svg>
-          Welcome Message / Prices
-        </div>
-        <div>
-          <label class="field-label">Text message sent before audio and images</label>
-          <textarea class="field-input" id="s-price-3" placeholder="Welcome! Here are our prices:&#10;&#10;Product A - $XX&#10;&#10;Check the images below 👇"></textarea>
-        </div>
-        <button class="btn-primary" id="save-config-btn-3">Save Campaign 3</button>
-      </div>
-
-      <!-- Audio 3 -->
-      <div class="s-card">
-        <div class="s-card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/>
-          </svg>
-          Voice Message
-        </div>
-        <p class="hint">Upload your pre-recorded audio. It will be sent as a WhatsApp voice note.</p>
-        <div id="audio-preview-3" style="display:none">
-          <div class="audio-preview">
-            <button class="play-btn" id="preview-play-3">
-              <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            </button>
-            <span class="audio-name" id="audio-name-3">audio.mp3</span>
-            <button class="icon-btn danger" id="del-audio-3" title="Remove">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          </div>
-          <audio id="audio-player-3"></audio>
-        </div>
-        <div class="upload-zone" id="audio-zone-3">
-          <input type="file" id="audio-input-3" accept="audio/*">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          Click to upload audio or drag & drop<br>
-          <span style="font-size:11px;color:var(--t3)">MP3, OGG, M4A, WAV supported</span>
-        </div>
-        <div class="record-row">
-          <span style="font-size:11px;color:var(--t3)">or</span>
-          <button class="record-btn" id="record-btn-3" onclick="toggleRecording(3)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/><line x1="9" y1="21" x2="15" y2="21" stroke="currentColor" stroke-width="2"/></svg>
-            Record voice note
-          </button>
-          <span class="record-timer" id="record-timer-3" style="display:none">
-            <span class="record-dot"></span><span id="record-time-3">0:00</span>
-          </span>
-          <button class="record-stop-btn" id="record-stop-btn-3" style="display:none" onclick="stopRecording(3)">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-            Stop
-          </button>
-        </div>
-      </div>
-
-      <!-- Images 3 -->
-      <div class="s-card">
-        <div class="s-card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          Product Images
-        </div>
-        <p class="hint">These images are sent after the audio. Max 20 images.</p>
-        <div class="images-grid" id="images-grid-3"></div>
-        <div class="upload-zone" id="images-zone-3">
-          <input type="file" id="images-input-3" accept="image/*" multiple>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          Click to upload images or drag & drop<br>
-          <span style="font-size:11px;color:var(--t3)">JPG, PNG, WEBP supported</span>
-        </div>
-      </div>
+      <!-- Add Campaign Button -->
+      <button id="add-campaign-btn" class="btn-add-campaign" onclick="addCampaign()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Campaign
+      </button>
 
       <!-- Reminder Message -->
       <div class="s-card">
@@ -1688,15 +1512,26 @@ async function loadConfig() {
   if (cfg.audio_file && cfg.audio_name) showAudioPreview(cfg.audio_name, cfg.audio_file, 1);
   if (cfg.images)   { try { renderImageGrid(JSON.parse(cfg.images),   1); } catch {} }
 
-  if (cfg.trigger_keyword_2) document.getElementById('s-trigger-2').value = cfg.trigger_keyword_2;
-  if (cfg.price_text_2)      document.getElementById('s-price-2').value   = cfg.price_text_2;
-  if (cfg.audio_file_2 && cfg.audio_name_2) showAudioPreview(cfg.audio_name_2, cfg.audio_file_2, 2);
-  if (cfg.images_2) { try { renderImageGrid(JSON.parse(cfg.images_2), 2); } catch {} }
+  // Restore dynamic campaigns
+  let stored = [];
+  try { stored = JSON.parse(cfg.active_campaigns || '[]'); } catch {}
+  // Also auto-detect slots with data in case active_campaigns wasn't saved
+  for (let i = 2; i <= MAX_CAMPAIGNS; i++) {
+    if (cfg[`trigger_keyword_${i}`] || cfg[`price_text_${i}`] || cfg[`audio_file_${i}`] || cfg[`images_${i}`]) {
+      if (!stored.includes(i)) stored.push(i);
+    }
+  }
+  stored.sort((a, b) => a - b);
+  for (const n of stored) addCampaign(n);
 
-  if (cfg.trigger_keyword_3) document.getElementById('s-trigger-3').value = cfg.trigger_keyword_3;
-  if (cfg.price_text_3)      document.getElementById('s-price-3').value   = cfg.price_text_3;
-  if (cfg.audio_file_3 && cfg.audio_name_3) showAudioPreview(cfg.audio_name_3, cfg.audio_file_3, 3);
-  if (cfg.images_3) { try { renderImageGrid(JSON.parse(cfg.images_3), 3); } catch {} }
+  // Populate dynamic campaign fields
+  for (const n of activeCampaigns) {
+    const sfx = `-${n}`;
+    if (cfg[`trigger_keyword_${n}`]) document.getElementById(`s-trigger${sfx}`).value = cfg[`trigger_keyword_${n}`];
+    if (cfg[`price_text_${n}`])      document.getElementById(`s-price${sfx}`).value   = cfg[`price_text_${n}`];
+    if (cfg[`audio_file_${n}`] && cfg[`audio_name_${n}`]) showAudioPreview(cfg[`audio_name_${n}`], cfg[`audio_file_${n}`], n);
+    if (cfg[`images_${n}`]) { try { renderImageGrid(JSON.parse(cfg[`images_${n}`]), n); } catch {} }
+  }
 
   const reminderText = cfg.reminder_text || 'مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف';
   document.getElementById('s-reminder').value = reminderText;
@@ -1738,7 +1573,7 @@ let recordSeconds = 0;
 async function toggleRecording(slot) {
   if (mediaRecorder && mediaRecorder.state === 'recording') return;
   recordSlot = slot;
-  const s = slot === 2 ? '-2' : '';
+  const s = slot === 1 ? '' : `-${slot}`;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
@@ -1769,7 +1604,7 @@ function stopRecording(slot) {
 }
 
 function setRecordingUI(slot, isRecording) {
-  const s = slot === 2 ? '-2' : '';
+  const s = slot === 1 ? '' : `-${slot}`;
   const btn = document.getElementById(`record-btn${s}`);
   const timer = document.getElementById(`record-timer${s}`);
   const stopBtn = document.getElementById(`record-stop-btn${s}`);
@@ -1846,7 +1681,7 @@ imagesInput.addEventListener('change', () => {
   if (imagesInput.files.length) uploadImages(imagesInput.files);
 });
 
-const currentImages = { 1: [], 2: [], 3: [] };
+const currentImages = { 1: [] };
 
 async function uploadImages(files, slot = 1) {
   const fd = new FormData();
@@ -2005,14 +1840,206 @@ function fmtDate(iso) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  CAMPAIGN 2 — config save
+//  DYNAMIC CAMPAIGNS (slots 2–5)
 // ═══════════════════════════════════════════════════════════════
-document.getElementById('save-config-btn-2').addEventListener('click', async () => {
-  const trigger_keyword_2 = document.getElementById('s-trigger-2').value.trim();
-  const price_text_2      = document.getElementById('s-price-2').value.trim();
-  await api('/api/config', 'POST', { trigger_keyword_2, price_text_2 });
-  toast('Campaign 2 saved!', 'success');
-});
+const MAX_CAMPAIGNS = 5;
+let activeCampaigns = []; // e.g. [2, 3, 4]
+
+function campaignBlockHTML(n) {
+  const sfx = `-${n}`;
+  return `
+  <div id="campaign-block-${n}">
+    <div class="campaign-divider">
+      <div class="campaign-divider-line"></div>
+      <span class="campaign-divider-label">Campaign ${n}</span>
+      <button class="campaign-remove-btn" onclick="removeCampaign(${n})" title="Remove Campaign ${n}">×</button>
+      <div class="campaign-divider-line"></div>
+    </div>
+
+    <div class="s-card">
+      <div class="s-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        Trigger Keyword
+      </div>
+      <div>
+        <label class="field-label">Keyword that triggers Campaign ${n}</label>
+        <input type="text" class="field-input" id="s-trigger${sfx}" placeholder="e.g. Order, Buy, Info">
+      </div>
+      <p class="hint">Triggers only when earlier campaign keywords do not match.</p>
+    </div>
+
+    <div class="s-card">
+      <div class="s-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        Welcome Message / Prices
+      </div>
+      <div>
+        <label class="field-label">Text message sent before audio and images</label>
+        <textarea class="field-input" id="s-price${sfx}" placeholder="Welcome! Here are our prices:&#10;&#10;Check the images below 👇"></textarea>
+      </div>
+      <button class="btn-primary" id="save-config-btn${sfx}">Save Campaign ${n}</button>
+    </div>
+
+    <div class="s-card">
+      <div class="s-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/>
+        </svg>
+        Voice Message
+      </div>
+      <p class="hint">Upload your pre-recorded audio. It will be sent as a WhatsApp voice note.</p>
+      <div id="audio-preview${sfx}" style="display:none">
+        <div class="audio-preview">
+          <button class="play-btn" id="preview-play${sfx}">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+          <span class="audio-name" id="audio-name${sfx}">audio.mp3</span>
+          <button class="icon-btn danger" id="del-audio${sfx}" title="Remove">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <audio id="audio-player${sfx}"></audio>
+      </div>
+      <div class="upload-zone" id="audio-zone${sfx}">
+        <input type="file" id="audio-input${sfx}" accept="audio/*">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Click to upload audio or drag & drop<br>
+        <span style="font-size:11px;color:var(--t3)">MP3, OGG, M4A, WAV supported</span>
+      </div>
+      <div class="record-row">
+        <span style="font-size:11px;color:var(--t3)">or</span>
+        <button class="record-btn" id="record-btn${sfx}" onclick="toggleRecording(${n})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/><line x1="9" y1="21" x2="15" y2="21" stroke="currentColor" stroke-width="2"/></svg>
+          Record voice note
+        </button>
+        <span class="record-timer" id="record-timer${sfx}" style="display:none">
+          <span class="record-dot"></span><span id="record-time${sfx}">0:00</span>
+        </span>
+        <button class="record-stop-btn" id="record-stop-btn${sfx}" style="display:none" onclick="stopRecording(${n})">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          Stop
+        </button>
+      </div>
+    </div>
+
+    <div class="s-card">
+      <div class="s-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        Product Images
+      </div>
+      <p class="hint">These images are sent after the audio. Max 20 images.</p>
+      <div class="images-grid" id="images-grid${sfx}"></div>
+      <div class="upload-zone" id="images-zone${sfx}">
+        <input type="file" id="images-input${sfx}" accept="image/*" multiple>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Click to upload images or drag & drop<br>
+        <span style="font-size:11px;color:var(--t3)">JPG, PNG, WEBP supported</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function wireCampaign(n) {
+  const sfx = `-${n}`;
+  const audioZone  = document.getElementById(`audio-zone${sfx}`);
+  const audioInput = document.getElementById(`audio-input${sfx}`);
+  audioZone.addEventListener('click', () => audioInput.click());
+  audioZone.addEventListener('dragover',  (e) => { e.preventDefault(); audioZone.classList.add('drag'); });
+  audioZone.addEventListener('dragleave', ()  => audioZone.classList.remove('drag'));
+  audioZone.addEventListener('drop', (e) => {
+    e.preventDefault(); audioZone.classList.remove('drag');
+    if (e.dataTransfer.files[0]) uploadAudio(e.dataTransfer.files[0], n);
+  });
+  audioInput.addEventListener('change', () => {
+    if (audioInput.files[0]) uploadAudio(audioInput.files[0], n);
+  });
+  document.getElementById(`preview-play${sfx}`).addEventListener('click', () => {
+    const p = document.getElementById(`audio-player${sfx}`);
+    p.paused ? p.play() : p.pause();
+  });
+  document.getElementById(`del-audio${sfx}`).addEventListener('click', async () => {
+    await api(`/api/upload/audio?slot=${n}`, 'DELETE');
+    document.getElementById(`audio-preview${sfx}`).style.display = 'none';
+    document.getElementById(`audio-zone${sfx}`).style.display = '';
+    document.getElementById(`audio-player${sfx}`).src = '';
+    toast('Audio removed', 'success');
+  });
+
+  const imagesZone  = document.getElementById(`images-zone${sfx}`);
+  const imagesInput = document.getElementById(`images-input${sfx}`);
+  imagesZone.addEventListener('click', () => imagesInput.click());
+  imagesZone.addEventListener('dragover',  (e) => { e.preventDefault(); imagesZone.classList.add('drag'); });
+  imagesZone.addEventListener('dragleave', ()  => imagesZone.classList.remove('drag'));
+  imagesZone.addEventListener('drop', (e) => {
+    e.preventDefault(); imagesZone.classList.remove('drag');
+    if (e.dataTransfer.files.length) uploadImages(e.dataTransfer.files, n);
+  });
+  imagesInput.addEventListener('change', () => {
+    if (imagesInput.files.length) uploadImages(imagesInput.files, n);
+  });
+
+  document.getElementById(`save-config-btn${sfx}`).addEventListener('click', async () => {
+    const body = {};
+    body[`trigger_keyword_${n}`] = document.getElementById(`s-trigger${sfx}`).value.trim();
+    body[`price_text_${n}`]      = document.getElementById(`s-price${sfx}`).value.trim();
+    await api('/api/config', 'POST', body);
+    toast(`Campaign ${n} saved!`, 'success');
+  });
+}
+
+function addCampaign(n) {
+  if (!n) {
+    // Find the next available slot
+    for (let i = 2; i <= MAX_CAMPAIGNS; i++) {
+      if (!activeCampaigns.includes(i)) { n = i; break; }
+    }
+  }
+  if (!n || activeCampaigns.includes(n)) return;
+  activeCampaigns.push(n);
+  activeCampaigns.sort((a, b) => a - b);
+
+  const container = document.getElementById('campaigns-container');
+  container.insertAdjacentHTML('beforeend', campaignBlockHTML(n));
+  wireCampaign(n);
+  updateAddCampaignBtn();
+  saveActiveCampaigns();
+}
+
+async function removeCampaign(n) {
+  const block = document.getElementById(`campaign-block-${n}`);
+  if (block) block.remove();
+  activeCampaigns = activeCampaigns.filter(x => x !== n);
+  delete currentImages[n];
+  updateAddCampaignBtn();
+  saveActiveCampaigns();
+  // Clear config for this slot
+  const body = {};
+  body[`trigger_keyword_${n}`] = '';
+  body[`price_text_${n}`] = '';
+  await api('/api/config', 'POST', body);
+}
+
+function updateAddCampaignBtn() {
+  const btn = document.getElementById('add-campaign-btn');
+  btn.disabled = activeCampaigns.length >= MAX_CAMPAIGNS - 1; // slots 2-5 = 4 extras
+}
+
+async function saveActiveCampaigns() {
+  await api('/api/config', 'POST', { active_campaigns: JSON.stringify(activeCampaigns) });
+}
 
 function showReminderPreview(text) {
   const preview = document.getElementById('reminder-preview');
@@ -2029,90 +2056,6 @@ document.getElementById('save-reminder-btn').addEventListener('click', async () 
   await api('/api/config', 'POST', { reminder_text });
   showReminderPreview(reminder_text);
   toast('Reminder saved!', 'success');
-});
-
-document.getElementById('save-config-btn-3').addEventListener('click', async () => {
-  const trigger_keyword_3 = document.getElementById('s-trigger-3').value.trim();
-  const price_text_3      = document.getElementById('s-price-3').value.trim();
-  await api('/api/config', 'POST', { trigger_keyword_3, price_text_3 });
-  toast('Campaign 3 saved!', 'success');
-});
-
-// ── Campaign 2 audio ──────────────────────────────────────────
-const audioZone2  = document.getElementById('audio-zone-2');
-const audioInput2 = document.getElementById('audio-input-2');
-audioZone2.addEventListener('click', () => audioInput2.click());
-audioZone2.addEventListener('dragover',  (e) => { e.preventDefault(); audioZone2.classList.add('drag'); });
-audioZone2.addEventListener('dragleave', ()  => audioZone2.classList.remove('drag'));
-audioZone2.addEventListener('drop', (e) => {
-  e.preventDefault(); audioZone2.classList.remove('drag');
-  const file = e.dataTransfer.files[0];
-  if (file) uploadAudio(file, 2);
-});
-audioInput2.addEventListener('change', () => {
-  if (audioInput2.files[0]) uploadAudio(audioInput2.files[0], 2);
-});
-document.getElementById('preview-play-2').addEventListener('click', () => {
-  const player = document.getElementById('audio-player-2');
-  if (player.paused) player.play(); else player.pause();
-});
-document.getElementById('del-audio-2').addEventListener('click', async () => {
-  await api('/api/upload/audio?slot=2', 'DELETE');
-  document.getElementById('audio-preview-2').style.display = 'none';
-  document.getElementById('audio-zone-2').style.display    = 'block';
-  document.getElementById('audio-player-2').src = '';
-  toast('Audio removed', 'success');
-});
-
-// ── Campaign 2 images ─────────────────────────────────────────
-const imagesZone2  = document.getElementById('images-zone-2');
-const imagesInput2 = document.getElementById('images-input-2');
-imagesZone2.addEventListener('click', () => imagesInput2.click());
-imagesZone2.addEventListener('dragover',  (e) => { e.preventDefault(); imagesZone2.classList.add('drag'); });
-imagesZone2.addEventListener('dragleave', ()  => imagesZone2.classList.remove('drag'));
-imagesZone2.addEventListener('drop', (e) => {
-  e.preventDefault(); imagesZone2.classList.remove('drag');
-  if (e.dataTransfer.files.length) uploadImages(e.dataTransfer.files, 2);
-});
-imagesInput2.addEventListener('change', () => {
-  if (imagesInput2.files.length) uploadImages(imagesInput2.files, 2);
-});
-
-// ── Campaign 3 audio ──────────────────────────────────────────
-const audioZone3  = document.getElementById('audio-zone-3');
-const audioInput3 = document.getElementById('audio-input-3');
-audioZone3.addEventListener('click', () => audioInput3.click());
-audioZone3.addEventListener('dragover',  (e) => { e.preventDefault(); audioZone3.classList.add('drag'); });
-audioZone3.addEventListener('dragleave', ()  => audioZone3.classList.remove('drag'));
-audioZone3.addEventListener('drop', (e) => {
-  e.preventDefault(); audioZone3.classList.remove('drag');
-  if (e.dataTransfer.files[0]) uploadAudio(e.dataTransfer.files[0], 3);
-});
-audioInput3.addEventListener('change', () => {
-  if (audioInput3.files[0]) uploadAudio(audioInput3.files[0], 3);
-});
-document.getElementById('preview-play-3').addEventListener('click', () => {
-  const p = document.getElementById('audio-player-3');
-  p.paused ? p.play() : p.pause();
-});
-document.getElementById('del-audio-3').addEventListener('click', async () => {
-  await fetch('/api/upload/audio?slot=3', { method: 'DELETE' });
-  document.getElementById('audio-preview-3').style.display = 'none';
-  document.getElementById('audio-zone-3').style.display = '';
-});
-
-// ── Campaign 3 images ─────────────────────────────────────────
-const imagesZone3  = document.getElementById('images-zone-3');
-const imagesInput3 = document.getElementById('images-input-3');
-imagesZone3.addEventListener('click', () => imagesInput3.click());
-imagesZone3.addEventListener('dragover',  (e) => { e.preventDefault(); imagesZone3.classList.add('drag'); });
-imagesZone3.addEventListener('dragleave', ()  => imagesZone3.classList.remove('drag'));
-imagesZone3.addEventListener('drop', (e) => {
-  e.preventDefault(); imagesZone3.classList.remove('drag');
-  if (e.dataTransfer.files.length) uploadImages(e.dataTransfer.files, 3);
-});
-imagesInput3.addEventListener('change', () => {
-  if (imagesInput3.files.length) uploadImages(imagesInput3.files, 3);
 });
 
 // ═══════════════════════════════════════════════════════════════

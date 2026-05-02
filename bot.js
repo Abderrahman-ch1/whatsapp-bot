@@ -91,14 +91,15 @@ function init(io, db) {
 
     // Detect trigger match before saving so we can skip the unread increment
     const alreadyHandled = db.isContactBotHandled(phone);
-    const triggerKw  = db.getConfig('trigger_keyword');
-    const triggerKw2 = db.getConfig('trigger_keyword_2');
-    const triggerKw3 = db.getConfig('trigger_keyword_3');
     const lc = body.toLowerCase();
-    const matchedSlot =
-      !alreadyHandled && triggerKw  && lc.includes(triggerKw.toLowerCase())  ? '' :
-      !alreadyHandled && triggerKw2 && lc.includes(triggerKw2.toLowerCase()) ? '_2' :
-      !alreadyHandled && triggerKw3 && lc.includes(triggerKw3.toLowerCase()) ? '_3' : null;
+    let matchedSlot = null;
+    if (!alreadyHandled) {
+      const slots = ['', '_2', '_3', '_4', '_5'];
+      for (const sfx of slots) {
+        const kw = db.getConfig(`trigger_keyword${sfx}`);
+        if (kw && lc.includes(kw.toLowerCase())) { matchedSlot = sfx; break; }
+      }
+    }
 
     // Trigger messages are handled by the bot — don't mark as unread
     const saved = db.saveMessage(phone, 'in', 'text', body, null, false, matchedSlot === null);
