@@ -1900,7 +1900,7 @@ document.getElementById('toggle-settings').addEventListener('click', () => {
   const panel = document.getElementById('settings-panel');
   if (state.settingsVisible) {
     app.style.gridTemplateColumns = '300px 1fr 340px';
-    panel.style.overflow = 'hidden';
+    panel.style.overflow = '';
   } else {
     app.style.gridTemplateColumns = '300px 1fr 0';
     panel.style.overflow = 'hidden';
