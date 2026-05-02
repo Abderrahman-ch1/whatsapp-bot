@@ -777,6 +777,11 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
             <circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
           </svg>
         </button>
+        <button class="btn-settings-toggle" title="Change credentials" onclick="openCredModal()" style="margin-left:2px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+        </button>
         <button class="btn-settings-toggle" id="logout-btn" title="Log out" onclick="handleLogout()" style="margin-left:2px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
@@ -1015,54 +1020,55 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 
     </div>
 
-      <!-- Change Credentials -->
-      <div class="s-card">
-        <div class="s-card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-          </svg>
-          Change Login Credentials
-        </div>
-        <p class="hint">Update your username and password. You will stay logged in after saving.</p>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div>
-            <label class="field-label">Current Password</label>
-            <div class="login-field-pw" style="position:relative">
-              <input type="password" class="field-input" id="cred-current-pw" placeholder="Enter current password" style="padding-right:38px">
-              <button type="button" class="show-pw-btn" onclick="togglePw('cred-current-pw')" tabindex="-1">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-          <div>
-            <label class="field-label">New Username</label>
-            <input type="text" class="field-input" id="cred-new-username" placeholder="New username">
-          </div>
-          <div>
-            <label class="field-label">New Password</label>
-            <div class="login-field-pw" style="position:relative">
-              <input type="password" class="field-input" id="cred-new-pw" placeholder="Min. 6 characters" style="padding-right:38px">
-              <button type="button" class="show-pw-btn" onclick="togglePw('cred-new-pw')" tabindex="-1">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-          <div>
-            <label class="field-label">Confirm New Password</label>
-            <div class="login-field-pw" style="position:relative">
-              <input type="password" class="field-input" id="cred-confirm-pw" placeholder="Repeat new password" style="padding-right:38px">
-              <button type="button" class="show-pw-btn" onclick="togglePw('cred-confirm-pw')" tabindex="-1">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-          <div id="cred-error" style="font-size:12.5px;color:var(--red);min-height:16px"></div>
-          <button class="btn-primary" id="save-cred-btn" onclick="changeCredentials()">Save New Credentials</button>
-        </div>
-      </div>
-
     </div>
   </aside>
+</div>
+
+<!-- Change Credentials Modal -->
+<div id="cred-modal" onclick="if(event.target===this)closeCredModal()" style="display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:28px;width:100%;max-width:360px;box-shadow:0 24px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--t1)">Change Credentials</span>
+      <button onclick="closeCredModal()" style="background:none;border:none;color:var(--t2);cursor:pointer;padding:4px;display:flex;align-items:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div>
+        <label class="field-label">Current Password</label>
+        <div class="login-field-pw" style="position:relative">
+          <input type="password" class="field-input" id="cred-current-pw" placeholder="Enter current password" style="padding-right:38px">
+          <button type="button" class="show-pw-btn" onclick="togglePw('cred-current-pw')" tabindex="-1">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div>
+        <label class="field-label">New Username</label>
+        <input type="text" class="field-input" id="cred-new-username" placeholder="New username">
+      </div>
+      <div>
+        <label class="field-label">New Password</label>
+        <div class="login-field-pw" style="position:relative">
+          <input type="password" class="field-input" id="cred-new-pw" placeholder="Min. 6 characters" style="padding-right:38px">
+          <button type="button" class="show-pw-btn" onclick="togglePw('cred-new-pw')" tabindex="-1">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div>
+        <label class="field-label">Confirm New Password</label>
+        <div class="login-field-pw" style="position:relative">
+          <input type="password" class="field-input" id="cred-confirm-pw" placeholder="Repeat new password" style="padding-right:38px">
+          <button type="button" class="show-pw-btn" onclick="togglePw('cred-confirm-pw')" tabindex="-1">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="cred-error" style="font-size:12.5px;color:var(--red);min-height:16px"></div>
+      <button class="btn-primary" id="save-cred-btn" onclick="changeCredentials()">Save New Credentials</button>
+    </div>
+  </div>
 </div>
 
 <!-- Toast container -->
@@ -1734,8 +1740,9 @@ async function changeCredentials() {
   try {
     const res = await api('/api/auth/change', 'POST', { currentPassword, newUsername, newPassword });
     if (res.ok) {
+      closeCredModal();
       toast('Credentials updated! Please log in again.', 'success');
-      setTimeout(() => location.reload(), 1500);
+      setTimeout(() => location.reload(), 1800);
     } else {
       errEl.textContent = res.error || 'Failed to update credentials.';
     }
@@ -1753,6 +1760,23 @@ function togglePassword() {
   input.type = isHidden ? 'text' : 'password';
   document.getElementById('eye-icon').style.display = isHidden ? 'none' : '';
   document.getElementById('eye-off-icon').style.display = isHidden ? '' : 'none';
+}
+
+function openCredModal() {
+  const m = document.getElementById('cred-modal');
+  m.style.display = 'flex';
+  document.getElementById('cred-current-pw').value = '';
+  document.getElementById('cred-new-username').value = '';
+  document.getElementById('cred-new-pw').value = '';
+  document.getElementById('cred-confirm-pw').value = '';
+  document.getElementById('cred-error').textContent = '';
+  document.getElementById('save-cred-btn').disabled = false;
+  document.getElementById('save-cred-btn').textContent = 'Save New Credentials';
+  setTimeout(() => document.getElementById('cred-current-pw').focus(), 50);
+}
+
+function closeCredModal() {
+  document.getElementById('cred-modal').style.display = 'none';
 }
 
 function togglePw(id) {
