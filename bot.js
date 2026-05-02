@@ -102,22 +102,23 @@ function init(io, db) {
     const contactName = msg._data?.notifyName || phone;
 
     db.upsertContact(phone, contactName);
-    const saved = db.saveMessage(phone, 'in', 'text', body, null, false);
 
-    io.emit('new_message', { phone, name: contactName, ...saved });
-
+    // Detect trigger match before saving so we can skip the unread increment
     const alreadyHandled = db.isContactBotHandled(phone);
-    if (!alreadyHandled) {
-      const triggerKw  = db.getConfig('trigger_keyword');
-      const triggerKw2 = db.getConfig('trigger_keyword_2');
-      const lc = body.toLowerCase();
-      if (triggerKw && lc.includes(triggerKw.toLowerCase())) {
-        await sleep(30000);
-        await sendBotResponse(msg.from, phone, db, io, '');
-      } else if (triggerKw2 && lc.includes(triggerKw2.toLowerCase())) {
-        await sleep(30000);
-        await sendBotResponse(msg.from, phone, db, io, '_2');
-      }
+    const triggerKw  = db.getConfig('trigger_keyword');
+    const triggerKw2 = db.getConfig('trigger_keyword_2');
+    const lc = body.toLowerCase();
+    const matchedSlot =
+      !alreadyHandled && triggerKw  && lc.includes(triggerKw.toLowerCase())  ? '' :
+      !alreadyHandled && triggerKw2 && lc.includes(triggerKw2.toLowerCase()) ? '_2' : null;
+
+    // Trigger messages are handled by the bot — don't mark as unread
+    const saved = db.saveMessage(phone, 'in', 'text', body, null, false, matchedSlot === null);
+    io.emit('new_message', { phone, name: contactName, ...saved, countUnread: matchedSlot === null });
+
+    if (matchedSlot !== null) {
+      await sleep(30000);
+      await sendBotResponse(msg.from, phone, db, io, matchedSlot);
     }
   });
 

@@ -956,7 +956,7 @@ socket.on('new_message', (msg) => {
     c.last_message_at = msg.created_at;
     if (msg.name) c.name = msg.name;
     // Increment unread only for incoming messages not currently viewed
-    if (msg.direction === 'in' && !isActiveChat) c.unread = (c.unread || 0) + 1;
+    if (msg.direction === 'in' && !isActiveChat && msg.countUnread !== false) c.unread = (c.unread || 0) + 1;
     // Move to top
     state.conversations.splice(idx, 1);
     state.conversations.unshift(c);

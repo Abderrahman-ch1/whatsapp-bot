@@ -62,13 +62,14 @@ function getMessages(phone) {
   return db.prepare('SELECT * FROM messages WHERE phone = ? ORDER BY created_at ASC').all(phone);
 }
 
-function saveMessage(phone, direction, type, content, filePath, isBot) {
+function saveMessage(phone, direction, type, content, filePath, isBot, countUnread = true) {
   const result = db.prepare(`
     INSERT INTO messages (phone, direction, type, content, file_path, bot)
     VALUES (?, ?, ?, ?, ?, ?)
   `).run(phone, direction, type, content, filePath || null, isBot ? 1 : 0);
 
-  db.prepare(`UPDATE contacts SET last_message_at = datetime('now')${direction === 'in' ? ', unread = unread + 1' : ''} WHERE phone = ?`).run(phone);
+  const unreadInc = direction === 'in' && countUnread ? ', unread = unread + 1' : '';
+  db.prepare(`UPDATE contacts SET last_message_at = datetime('now')${unreadInc} WHERE phone = ?`).run(phone);
 
   return {
     id: result.lastInsertRowid,
