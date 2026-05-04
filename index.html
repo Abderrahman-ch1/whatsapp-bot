@@ -5,33 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Whatsy</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:          #060A0E;
-  --surface:     #0B1420;
-  --elevated:    #101E30;
-  --hover:       #162539;
-  --active:      #1B2E46;
-  --border:      #1C2F45;
-  --border-soft: #243A56;
+  --bg:          #08090f;
+  --surface:     #0e0f1e;
+  --elevated:    #131428;
+  --hover:       #181932;
+  --active:      #1c1f3a;
+  --border:      #1e2240;
+  --border-soft: #2a2f56;
 
-  --green:       #22C55E;
-  --green-dim:   #16A34A;
-  --green-glow:  rgba(34,197,94,.12);
-  --green-glow2: rgba(34,197,94,.22);
-  --green-text:  #4ADE80;
+  --green:       #4facfe;
+  --green-dim:   #2d8fe0;
+  --green-glow:  rgba(79,172,254,.12);
+  --green-glow2: rgba(79,172,254,.22);
+  --green-text:  #7dc4ff;
 
   --red:         #EF4444;
   --amber:       #F59E0B;
 
-  --t1: #E0EEF8;
-  --t2: #7A9BB5;
-  --t3: #3D5A72;
+  --t1: #e6efff;
+  --t2: #7a96bc;
+  --t3: #3d5578;
 
   --r: 10px;
   --rs: 6px;
@@ -40,7 +41,7 @@
   --ease: cubic-bezier(.16,1,.3,1);
 }
 
-html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--t1); font-family: 'Outfit', sans-serif; font-size: 14px; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--t1); font-family: 'Inter', sans-serif; font-size: 14px; }
 
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -51,18 +52,17 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 #connect-screen {
   position: fixed; inset: 0; z-index: 100;
   display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(34,197,94,.08) 0%, transparent 70%),
-              radial-gradient(ellipse 60% 40% at 20% 20%, rgba(34,197,94,.04) 0%, transparent 60%),
-              var(--bg);
+  background: transparent;
 }
 
 .connect-card {
   display: flex; flex-direction: column; align-items: center; gap: 28px;
   padding: 48px 56px;
-  background: var(--surface);
+  background: rgba(14,15,30,0.92);
   border: 1px solid var(--border);
   border-radius: var(--rl);
-  box-shadow: 0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(34,197,94,.06);
+  box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(79,172,254,.08);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   max-width: 440px; width: 100%; text-align: center;
 }
 
@@ -71,7 +71,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 }
 .connect-logo svg { width: 36px; height: 36px; }
 .connect-logo span {
-  font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800;
+  font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 800;
   letter-spacing: -.03em; color: var(--t1);
 }
 .connect-logo .dot { color: var(--green); }
@@ -106,7 +106,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 }
 .qr-spinner {
   width: 32px; height: 32px;
-  border: 3px solid #e5e5e5; border-top-color: #22C55E;
+  border: 3px solid rgba(79,172,254,.2); border-top-color: var(--green);
   border-radius: 50%; animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -125,12 +125,16 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   display: flex; align-items: center; justify-content: center;
 }
 
+/* ── PARTICLE CANVAS ── */
+#particle-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
 /* ── MAIN APP ── */
 #app {
   display: grid;
   grid-template-columns: 300px 1fr 340px;
   grid-template-rows: 100vh;
   height: 100vh;
+  position: relative; z-index: 1;
 }
 #app.settings-hidden { grid-template-columns: 300px 1fr 0; }
 
@@ -159,7 +163,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 }
 .brand-icon svg { width: 16px; height: 16px; }
 .brand-name {
-  font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
+  font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 800;
   letter-spacing: -.02em; color: var(--t1);
 }
 .brand-badge {
@@ -194,7 +198,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 #search {
   width: 100%; padding: 8px 10px 8px 32px;
   background: var(--elevated); border: 1px solid var(--border);
-  border-radius: var(--rs); color: var(--t1); font-family: 'Outfit', sans-serif; font-size: 13px;
+  border-radius: var(--rs); color: var(--t1); font-family: 'Inter', sans-serif; font-size: 13px;
   outline: none; transition: border-color .15s;
 }
 #search::placeholder { color: var(--t3); }
@@ -206,7 +210,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .sidebar-tab {
   flex: 1; padding: 7px 8px; border: 1px solid var(--border);
   background: transparent; border-radius: var(--rs);
-  color: var(--t2); font-size: 12px; font-family: 'Outfit', sans-serif;
+  color: var(--t2); font-size: 12px; font-family: 'Inter', sans-serif;
   cursor: pointer; transition: background .15s, color .15s, border-color .15s;
   display: flex; align-items: center; justify-content: center; gap: 6px;
 }
@@ -241,7 +245,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .avatar {
   flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+  font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700;
   color: var(--t1);
 }
 
@@ -307,7 +311,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   gap: 16px; color: var(--t3);
 }
 .chat-empty svg { opacity: .25; }
-.chat-empty h3 { font-family: 'Syne', sans-serif; font-size: 18px; color: var(--t2); font-weight: 700; }
+.chat-empty h3 { font-family: 'Inter', sans-serif; font-size: 18px; color: var(--t2); font-weight: 700; }
 .chat-empty p { font-size: 13px; max-width: 220px; text-align: center; line-height: 1.6; }
 
 .chat-header {
@@ -361,7 +365,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   position: relative;
 }
 .msg.in  .msg-bubble { background: var(--elevated); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-.msg.out .msg-bubble { background: #0D2B1A; border: 1px solid #1A4A2A; border-bottom-right-radius: 4px; }
+.msg.out .msg-bubble { background: #0a1535; border: 1px solid #142050; border-bottom-right-radius: 4px; }
 
 .msg-meta {
   display: flex; align-items: center; gap: 5px;
@@ -407,7 +411,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 }
 #msg-input {
   flex: 1; background: var(--elevated); border: 1px solid var(--border);
-  border-radius: var(--r); color: var(--t1); font-family: 'Outfit', sans-serif; font-size: 14px;
+  border-radius: var(--r); color: var(--t1); font-family: 'Inter', sans-serif; font-size: 14px;
   padding: 10px 14px; resize: none; outline: none; max-height: 120px; min-height: 40px;
   line-height: 1.5; transition: border-color .15s;
 }
@@ -438,7 +442,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   display: flex; align-items: center; gap: 10px; flex-shrink: 0;
 }
 .settings-header h2 {
-  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700;
   letter-spacing: -.01em; color: var(--t1); flex: 1;
 }
 .settings-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 14px; }
@@ -457,7 +461,7 @@ label.field-label { font-size: 12px; color: var(--t2); display: block; margin-bo
 
 .field-input {
   width: 100%; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--rs); color: var(--t1); font-family: 'Outfit', sans-serif;
+  border-radius: var(--rs); color: var(--t1); font-family: 'Inter', sans-serif;
   font-size: 13px; padding: 8px 11px; outline: none; transition: border-color .15s;
 }
 .field-input::placeholder { color: var(--t3); }
@@ -469,7 +473,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .btn-primary {
   width: 100%; padding: 9px; border-radius: var(--rs);
   background: var(--green); border: none; cursor: pointer;
-  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; color: #000;
+  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: #000;
   transition: background .15s, transform .1s;
 }
 .btn-primary:hover { background: var(--green-dim); }
@@ -478,7 +482,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .btn-outline {
   width: 100%; padding: 8px; border-radius: var(--rs);
   background: transparent; border: 1px solid var(--border);
-  cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 13px;
+  cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px;
   color: var(--t2); transition: all .15s;
 }
 .btn-outline:hover { background: var(--hover); color: var(--t1); border-color: var(--border-soft); }
@@ -486,7 +490,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .btn-danger {
   width: 100%; padding: 8px; border-radius: var(--rs);
   background: transparent; border: 1px solid rgba(239,68,68,.3);
-  cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 13px;
+  cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px;
   color: var(--red); transition: all .15s;
 }
 .btn-danger:hover { background: rgba(239,68,68,.1); }
@@ -494,7 +498,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .btn-add-campaign {
   width: 100%; padding: 9px; border-radius: var(--rs);
   background: transparent; border: 1px dashed var(--border);
-  cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
   color: var(--t2); display: flex; align-items: center; justify-content: center; gap: 6px;
   transition: border-color .15s, color .15s, background .15s;
 }
@@ -584,8 +588,9 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 }
 #lightbox img { max-width: 90vw; max-height: 90vh; border-radius: var(--r); }
 
-/* ── MOBILE ONLY ELEMENTS (hidden on desktop) ── */
-.mobile-back-btn, .mobile-settings-btn, .mobile-settings-close { display: none !important; }
+/* ── MOBILE ONLY ELEMENTS ── */
+.mobile-back-btn { display: flex !important; }
+.mobile-settings-btn, .mobile-settings-close { display: none !important; }
 
 /* ══════════════════════════════════════════════════
    MOBILE  ≤ 767 px
@@ -644,22 +649,109 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
   .toast { font-size: 12px; }
 }
 
+/* ── SUBSCRIPTION SCREEN ── */
+#sub-screen {
+  display: none; position: fixed; inset: 0; z-index: 10000;
+  background: transparent; align-items: flex-start; justify-content: center;
+  overflow-y: auto; padding: 40px 16px 60px;
+}
+#sub-screen.visible { display: flex; }
+.sub-inner {
+  width: 100%; max-width: 720px; display: flex; flex-direction: column; align-items: center; gap: 32px;
+}
+.sub-logo-wrap {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
+}
+.sub-logo-wrap svg { width: 36px; height: 36px; }
+.sub-logo-name {
+  font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 800; color: var(--t1); letter-spacing: -.02em;
+}
+.sub-heading { font-family: 'Inter', sans-serif; font-size: 36px; font-weight: 800; color: var(--t1); text-align: center; letter-spacing: -.04em; }
+.sub-sub { font-size: 15px; color: var(--t2); text-align: center; line-height: 1.6; }
+
+.sub-plans {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%;
+}
+@media (max-width: 480px) { .sub-plans { grid-template-columns: 1fr; } }
+
+.sub-plan-card {
+  background: rgba(14,15,30,0.92); border: 1.5px solid var(--border);
+  border-radius: var(--rl); padding: 32px 28px; cursor: pointer;
+  transition: border-color .2s, transform .15s, box-shadow .2s;
+  display: flex; flex-direction: column; gap: 16px;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 16px 48px rgba(0,0,0,.5);
+}
+.sub-plan-card:hover { border-color: rgba(79,172,254,.35); transform: translateY(-3px); box-shadow: 0 24px 60px rgba(0,0,0,.6); }
+.sub-plan-card.selected { border-color: var(--green); box-shadow: 0 0 0 3px rgba(79,172,254,.15), 0 24px 60px rgba(0,0,0,.6); }
+.sub-plan-card.pro-card { position: relative; }
+.sub-plan-badge {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--green); color: #000; font-size: 10px; font-weight: 700;
+  letter-spacing: .08em; padding: 2px 10px; border-radius: 20px; white-space: nowrap;
+}
+.sub-plan-name { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; color: var(--t1); letter-spacing: -.01em; }
+.sub-plan-price { font-size: 44px; font-weight: 800; color: var(--green); font-family: 'Inter', sans-serif; line-height: 1; letter-spacing: -.03em; }
+.sub-plan-price span { font-size: 14px; font-weight: 400; color: var(--t2); }
+.sub-plan-features { display: flex; flex-direction: column; gap: 9px; }
+.sub-plan-feature {
+  display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--t2);
+}
+.sub-plan-feature svg { flex-shrink: 0; color: var(--green); }
+.sub-plan-feature.locked { color: var(--t3); }
+.sub-plan-feature.locked svg { color: var(--t3); }
+
+.sub-form {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--rl); padding: 24px; display: flex; flex-direction: column; gap: 12px;
+}
+.sub-form-title { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: var(--t1); margin-bottom: 4px; }
+.sub-selected-plan {
+  padding: 10px 14px; background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.2);
+  border-radius: var(--r); font-size: 13px; color: var(--green); font-weight: 600;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sub-change-plan {
+  font-size: 11px; color: var(--t2); cursor: pointer; text-decoration: underline;
+  background: none; border: none; font-family: inherit;
+}
+.sub-change-plan:hover { color: var(--t1); }
+
+.sub-state {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--rl); padding: 48px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;
+}
+.sub-state-icon { font-size: 48px; }
+.sub-state-title { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; color: var(--t1); }
+.sub-state-text { font-size: 14px; color: var(--t2); line-height: 1.6; max-width: 340px; }
+
+/* Renewal banner */
+#renewal-banner {
+  display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 7000;
+  background: rgba(245,158,11,.12); border-bottom: 1px solid rgba(245,158,11,.3);
+  padding: 7px 20px; text-align: center; font-size: 12.5px; color: var(--amber);
+  font-weight: 500; backdrop-filter: blur(4px);
+}
+#renewal-banner a { color: var(--amber); font-weight: 700; text-decoration: underline; cursor: pointer; }
+#renewal-banner.visible { display: block; }
+
 /* ── LOGIN SCREEN ── */
 #login-screen {
   display: none;
   position: fixed; inset: 0; z-index: 9999;
-  background: var(--bg);
+  background: transparent;
   align-items: center; justify-content: center;
-  background-image: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(34,197,94,.08) 0%, transparent 70%);
 }
 #login-screen.visible { display: flex; }
 
 .login-card {
   width: 100%; max-width: 360px; padding: 40px 36px;
-  background: var(--surface);
+  background: rgba(14,15,30,0.92);
   border: 1px solid var(--border);
   border-radius: var(--rl);
-  box-shadow: 0 24px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(34,197,94,.06);
+  box-shadow: 0 24px 60px rgba(0,0,0,.7), 0 0 0 1px rgba(79,172,254,.08);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   display: flex; flex-direction: column; align-items: center; gap: 0;
 }
 
@@ -667,7 +759,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .login-logo svg { width: 52px; height: 52px; }
 
 .login-title {
-  font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700;
+  font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 700;
   color: var(--t1); letter-spacing: -0.02em; margin-bottom: 6px;
 }
 
@@ -680,7 +772,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .login-field input {
   width: 100%; padding: 11px 14px;
   background: var(--elevated); border: 1px solid var(--border-soft);
-  border-radius: var(--r); color: var(--t1); font-size: 14px; font-family: 'Outfit', sans-serif;
+  border-radius: var(--r); color: var(--t1); font-size: 14px; font-family: 'Inter', sans-serif;
   outline: none; transition: border-color .18s, box-shadow .18s;
 }
 .login-field input:focus {
@@ -704,7 +796,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .login-btn {
   width: 100%; padding: 12px;
   background: var(--green); color: #fff; border: none; border-radius: var(--r);
-  font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600;
+  font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
   cursor: pointer; transition: background .18s, transform .12s, box-shadow .18s;
   box-shadow: 0 4px 20px rgba(34,197,94,.3);
 }
@@ -719,7 +811,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .record-btn {
   display: flex; align-items: center; gap: 6px;
   padding: 7px 13px; background: var(--elevated); border: 1px solid var(--border-soft);
-  border-radius: var(--r); color: var(--t2); font-size: 12.5px; font-family: 'Outfit', sans-serif;
+  border-radius: var(--r); color: var(--t2); font-size: 12.5px; font-family: 'Inter', sans-serif;
   cursor: pointer; transition: background .15s, color .15s, border-color .15s;
 }
 .record-btn:hover { background: var(--hover); color: var(--t1); border-color: var(--green); }
@@ -736,23 +828,105 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .record-stop-btn {
   display: flex; align-items: center; gap: 5px;
   padding: 7px 12px; background: var(--red); border: none;
-  border-radius: var(--r); color: #fff; font-size: 12px; font-family: 'Outfit', sans-serif;
+  border-radius: var(--r); color: #fff; font-size: 12px; font-family: 'Inter', sans-serif;
   cursor: pointer; transition: opacity .15s;
 }
 .record-stop-btn:hover { opacity: .85; }
 </style>
 </head>
 <body>
+<canvas id="particle-canvas"></canvas>
+
+<!-- ═══════════════════════════════ SUBSCRIPTION SCREEN ═══════════════════════════════ -->
+<div id="sub-screen">
+  <div class="sub-inner">
+
+    <div class="sub-logo-wrap">
+      <img src="/favicon.svg" width="42" height="42" alt="Whatsy">
+      <span class="sub-logo-name">Whatsy</span>
+    </div>
+
+    <!-- Plan selection -->
+    <div id="sub-select-view" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:24px">
+      <div>
+        <h1 class="sub-heading">Choose your plan</h1>
+        <p class="sub-sub" style="margin-top:8px">Start automating your WhatsApp in minutes</p>
+      </div>
+
+      <div class="sub-plans">
+        <!-- Basic -->
+        <div class="sub-plan-card" id="plan-basic" onclick="selectPlan('basic')">
+          <div>
+            <div class="sub-plan-name">Basic</div>
+            <div class="sub-plan-price">$15<span>/mo</span></div>
+          </div>
+          <div class="sub-plan-features">
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>1 campaign</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Voice messages</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Product images</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Follow-up reminder</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Manual chat reply</div>
+          </div>
+        </div>
+        <!-- Pro -->
+        <div class="sub-plan-card pro-card" id="plan-pro" onclick="selectPlan('pro')">
+          <div class="sub-plan-badge">RECOMMENDED</div>
+          <div>
+            <div class="sub-plan-name">Pro</div>
+            <div class="sub-plan-price">$25<span>/mo</span></div>
+          </div>
+          <div class="sub-plan-features">
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Up to 5 campaigns</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Voice messages</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Product images</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Follow-up reminder</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Manual chat reply</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Priority support</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Request form (shown after selecting plan) -->
+      <div class="sub-form" id="sub-form-wrap" style="display:none">
+        <div class="sub-form-title">Your details</div>
+        <div class="sub-selected-plan">
+          <span id="sub-plan-display">—</span>
+          <button class="sub-change-plan" onclick="clearPlanSelection()">Change plan</button>
+        </div>
+        <input type="text" class="field-input" id="sub-name" placeholder="Your name *">
+        <input type="text" class="field-input" id="sub-phone" placeholder="Your WhatsApp number *">
+        <input type="email" class="field-input" id="sub-email" placeholder="Email (optional)">
+        <div id="sub-form-error" style="font-size:12px;color:var(--red);display:none"></div>
+        <button class="btn-primary" id="sub-submit-btn" onclick="submitPlanRequest()">Request Access →</button>
+      </div>
+    </div>
+
+    <!-- Pending state -->
+    <div id="sub-pending-view" style="display:none;width:100%">
+      <div class="sub-state">
+        <div class="sub-state-icon">⏳</div>
+        <div class="sub-state-title">Request received!</div>
+        <div class="sub-state-text">We'll review your request and contact you to complete payment. Your app will be activated within 24 hours.</div>
+      </div>
+    </div>
+
+    <!-- Expired state -->
+    <div id="sub-expired-view" style="display:none;width:100%">
+      <div class="sub-state">
+        <div class="sub-state-icon">🔒</div>
+        <div class="sub-state-title">Subscription expired</div>
+        <div class="sub-state-text">Your subscription has ended. Contact us to renew and get back to business immediately.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <!-- ═══════════════════════════════ LOGIN SCREEN ═══════════════════════════════ -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">
-      <svg viewBox="0 0 48 48" fill="none">
-        <rect width="48" height="48" rx="14" fill="rgba(34,197,94,.15)"/>
-        <path d="M24 10C16.268 10 10 16.268 10 24c0 2.553.666 4.952 1.832 7.024L10 38l7.198-1.808A13.92 13.92 0 0024 38c7.732 0 14-6.268 14-14S31.732 10 24 10z" fill="#22C55E"/>
-        <path d="M19 22.5v-1a1 1 0 011-1h1.5l1.5 1.5 1.5-1.5H26a1 1 0 011 1v1c0 .265-.105.52-.293.707l-2.5 2.5a1 1 0 01-1.414 0l-2.5-2.5A1 1 0 0119 22.5z" fill="white" opacity=".85"/>
-      </svg>
+      <img src="/favicon.svg" width="56" height="56" alt="Whatsy">
     </div>
     <h1 class="login-title">Whatsy</h1>
     <p class="login-sub">Sign in to your dashboard</p>
@@ -797,12 +971,8 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 <div id="connect-screen">
   <div class="connect-card">
     <div class="connect-logo">
-      <svg viewBox="0 0 40 40" fill="none">
-        <rect width="40" height="40" rx="10" fill="rgba(34,197,94,.12)"/>
-        <path d="M20 8C13.373 8 8 13.373 8 20c0 2.127.554 4.127 1.527 5.853L8 32l6.293-1.507A11.934 11.934 0 0020 32c6.627 0 12-5.373 12-12S26.627 8 20 8z" fill="#22C55E"/>
-        <path d="M15.5 17c0-.276.224-.5.5-.5h1c.276 0 .5.224.5.5v1.5l1.5 1.5 1.5-1.5V17c0-.276.224-.5.5-.5h1c.276 0 .5.224.5.5v2c0 .133-.053.26-.147.354l-2 2a.5.5 0 01-.707 0l-2-2A.5.5 0 0115.5 19v-2z" fill="white" opacity=".8"/>
-      </svg>
-      <span>Auto<span class="dot">Bot</span></span>
+      <img src="/favicon.svg" width="36" height="36" alt="Whatsy">
+      <span>Whatsy</span>
     </div>
 
     <div id="connect-status">
@@ -835,6 +1005,11 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 </div>
 
 <!-- ═══════════════════════════════ MAIN APP ═══════════════════════════════ -->
+<!-- Renewal banner (fixed top, shown 5 days before expiry) -->
+<div id="renewal-banner">
+  ⚠️ Your subscription expires in <strong id="renewal-days">?</strong> days — <a onclick="void(0)">contact us to renew</a>
+</div>
+
 <div id="app" style="display:none">
 
   <!-- ── SIDEBAR ── -->
@@ -842,9 +1017,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
     <div class="sidebar-header">
       <div class="brand">
         <div class="brand-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-          </svg>
+          <img src="/favicon.svg" width="18" height="18" alt="W">
         </div>
         <span class="brand-name">Whatsy</span>
         <span class="brand-badge">LIVE</span>
@@ -904,14 +1077,6 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
     <div id="chat-view" style="display:none; flex:1; display:none; flex-direction:column; overflow:hidden;">
       <div class="chat-header" id="chat-header"></div>
       <div class="messages-wrap" id="messages-wrap"></div>
-      <div class="input-area">
-        <textarea id="msg-input" rows="1" placeholder="Type a message…"></textarea>
-        <button class="send-btn" id="send-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-        </button>
-      </div>
     </div>
   </main>
 
@@ -1050,7 +1215,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         <p class="hint">Sent automatically 15 minutes after the bot campaign if the client hasn't replied.</p>
         <div>
           <label class="field-label">Reminder message</label>
-          <textarea class="field-input" id="s-reminder" rows="3" placeholder="مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف"></textarea>
+          <textarea class="field-input" id="s-reminder" rows="3" placeholder="e.g. Hi! Can you share your name, address and phone number?"></textarea>
         </div>
         <button class="btn-primary" id="save-reminder-btn">Save Reminder</button>
         <div id="reminder-preview" style="display:none;margin-top:10px;padding:11px 13px;background:var(--elevated);border:1px solid var(--border);border-radius:var(--r);border-left:3px solid var(--amber)">
@@ -1149,6 +1314,7 @@ socket.on('authenticated', () => {
 
 socket.on('ready', (info) => {
   state.connected = true;
+  if (!subscription.active) return;
   showDashboard(info);
   loadConversations();
   loadConfig();
@@ -1453,15 +1619,6 @@ function scrollToBottom() {
 // ═══════════════════════════════════════════════════════════════
 //  SEND MESSAGE
 // ═══════════════════════════════════════════════════════════════
-document.getElementById('send-btn').addEventListener('click', sendMessage);
-document.getElementById('msg-input').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-});
-document.getElementById('msg-input').addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-});
-
 async function sendMessage() {
   const input = document.getElementById('msg-input');
   const text = input.value.trim();
@@ -1533,7 +1690,7 @@ async function loadConfig() {
     if (cfg[`images_${n}`]) { try { renderImageGrid(JSON.parse(cfg[`images_${n}`]), n); } catch {} }
   }
 
-  const reminderText = cfg.reminder_text || 'مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف';
+  const reminderText = cfg.reminder_text || '';
   document.getElementById('s-reminder').value = reminderText;
   showReminderPreview(reminderText);
 }
@@ -2001,6 +2158,11 @@ function wireCampaign(n) {
 }
 
 function addCampaign(n) {
+  // Enforce Basic plan: only 1 campaign allowed
+  if (!n && subscription.plan === 'basic' && activeCampaigns.length >= 1) {
+    toast('Upgrade to Pro to add more campaigns', 'error');
+    return;
+  }
   if (!n) {
     // Find the next available slot
     for (let i = 2; i <= MAX_CAMPAIGNS; i++) {
@@ -2180,15 +2342,209 @@ async function handleLogout() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+//  SUBSCRIPTION
+// ═══════════════════════════════════════════════════════════════
+let subscription = { active: false, plan: '', daysLeft: null };
+let selectedPlan = '';
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.getElementById('plan-basic').classList.toggle('selected', plan === 'basic');
+  document.getElementById('plan-pro').classList.toggle('selected', plan === 'pro');
+  const labels = { basic: 'Basic — $15/month (1 campaign)', pro: 'Pro — $25/month (up to 5 campaigns)' };
+  document.getElementById('sub-plan-display').textContent = labels[plan];
+  document.getElementById('sub-form-wrap').style.display = 'flex';
+  document.getElementById('sub-form-wrap').style.flexDirection = 'column';
+  document.getElementById('sub-form-wrap').style.gap = '12px';
+  document.getElementById('sub-form-wrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function clearPlanSelection() {
+  selectedPlan = '';
+  document.getElementById('plan-basic').classList.remove('selected');
+  document.getElementById('plan-pro').classList.remove('selected');
+  document.getElementById('sub-form-wrap').style.display = 'none';
+}
+
+async function submitPlanRequest() {
+  const name  = document.getElementById('sub-name').value.trim();
+  const phone = document.getElementById('sub-phone').value.trim();
+  const email = document.getElementById('sub-email').value.trim();
+  const errEl = document.getElementById('sub-form-error');
+  const btn   = document.getElementById('sub-submit-btn');
+
+  errEl.style.display = 'none';
+  if (!name)         return (errEl.textContent = 'Name is required.',   errEl.style.display = 'block');
+  if (!phone)        return (errEl.textContent = 'Phone is required.',  errEl.style.display = 'block');
+  if (!selectedPlan) return (errEl.textContent = 'Choose a plan first.',errEl.style.display = 'block');
+
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const res = await fetch('/api/subscription/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone, email, plan: selectedPlan })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('sub-select-view').style.display = 'none';
+      document.getElementById('sub-pending-view').style.display = 'block';
+    } else {
+      errEl.textContent = data.error || 'Something went wrong.';
+      errEl.style.display = 'block';
+    }
+  } catch {
+    errEl.textContent = 'Network error. Try again.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Request Access →';
+  }
+}
+
+function showSubscriptionScreen(view) {
+  document.getElementById('sub-screen').classList.add('visible');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('connect-screen').style.display = 'none';
+  document.getElementById('sub-select-view').style.display  = view === 'select'  ? 'flex' : 'none';
+  document.getElementById('sub-pending-view').style.display = view === 'pending' ? 'block' : 'none';
+  document.getElementById('sub-expired-view').style.display = view === 'expired' ? 'block' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════════
 (async () => {
+  // 1. Check subscription
+  try {
+    const subRes = await fetch('/api/subscription/status');
+    const sub = await subRes.json();
+    subscription = sub;
+
+    if (!sub.active) {
+      if (sub.expired) {
+        showSubscriptionScreen('expired');
+      } else if (sub.pending) {
+        showSubscriptionScreen('pending');
+      } else {
+        showSubscriptionScreen('select');
+      }
+      return;
+    }
+
+    // Show renewal banner if ≤5 days left
+    if (sub.daysLeft !== null && sub.daysLeft <= 5) {
+      document.getElementById('renewal-days').textContent = sub.daysLeft;
+      document.getElementById('renewal-banner').classList.add('visible');
+    }
+  } catch {
+    showSubscriptionScreen('select');
+    return;
+  }
+
+  // 2. Check auth
   const res = await fetch('/api/auth/check');
   if (res.status === 401) {
     document.getElementById('login-screen').classList.add('visible');
     return;
   }
   await init();
+})();
+
+// ═══════════════════════════════════════════════════════════════
+//  PARTICLE CANVAS — hero background
+// ═══════════════════════════════════════════════════════════════
+(function() {
+  const canvas = document.getElementById('particle-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let pts = [];
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    spawn();
+  }
+
+  function spawn() {
+    const n = Math.min(90, Math.floor(canvas.width * canvas.height / 12000));
+    pts = Array.from({ length: n }, () => ({
+      x:  Math.random() * canvas.width,
+      y:  Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.38,
+      vy: (Math.random() - 0.5) * 0.38,
+      r:  Math.random() * 1.6 + 0.7,
+      a:  Math.random() * 0.55 + 0.25,
+      c:  Math.random() > 0.45 ? '#4facfe' : '#6496ff',
+    }));
+  }
+
+  function frame() {
+    // Draw gradient bg
+    const g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    g.addColorStop(0, '#08090f');
+    g.addColorStop(1, '#0f1022');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Subtle radial glow at centre-top
+    const glow = ctx.createRadialGradient(canvas.width * 0.5, 0, 0, canvas.width * 0.5, 0, canvas.height * 0.55);
+    glow.addColorStop(0, 'rgba(79,172,254,0.06)');
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Connection lines
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = pts[i].x - pts[j].x;
+        const dy = pts[i].y - pts[j].y;
+        const d  = Math.sqrt(dx * dx + dy * dy);
+        if (d < 130) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(79,172,254,${(1 - d / 130) * 0.13})`;
+          ctx.lineWidth = 0.5;
+          ctx.moveTo(pts[i].x, pts[i].y);
+          ctx.lineTo(pts[j].x, pts[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Particles
+    for (const p of pts) {
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < -6)  p.x = canvas.width  + 6;
+      if (p.x > canvas.width  + 6) p.x = -6;
+      if (p.y < -6)  p.y = canvas.height + 6;
+      if (p.y > canvas.height + 6) p.y = -6;
+
+      // Soft glow halo
+      const gr = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 7);
+      const alpha = Math.round(p.a * 180).toString(16).padStart(2, '0');
+      gr.addColorStop(0,   p.c + alpha);
+      gr.addColorStop(0.3, p.c + '22');
+      gr.addColorStop(1,   'transparent');
+      ctx.beginPath();
+      ctx.fillStyle = gr;
+      ctx.arc(p.x, p.y, p.r * 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Core dot
+      ctx.beginPath();
+      ctx.fillStyle = p.c;
+      ctx.globalAlpha = p.a;
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  frame();
+  window.addEventListener('resize', resize);
 })();
 </script>
 </body>

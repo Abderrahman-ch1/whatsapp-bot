@@ -78,6 +78,10 @@ function init(io, db) {
     clientInfo = null;
     console.log('❌ Disconnected:', reason);
     io.emit('disconnected', reason);
+    // Re-initialize after logout so a new QR is generated
+    setTimeout(() => {
+      try { client.initialize(); } catch {}
+    }, 3000);
   });
 
   client.on('message', async (msg) => {
@@ -127,8 +131,11 @@ async function sendBotResponse(chatId, phone, db, io, sfx = '') {
 
     const audioPath = db.getConfig(`audio_file${sfx}`);
     if (audioPath && fs.existsSync(audioPath)) {
+      const ext = path.extname(audioPath).toLowerCase();
+      const mimeMap = { '.ogg': 'audio/ogg; codecs=opus', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.wav': 'audio/wav', '.webm': 'audio/webm; codecs=opus' };
+      const mime = mimeMap[ext] || 'audio/ogg; codecs=opus';
       const data = fs.readFileSync(audioPath).toString('base64');
-      const media = new MessageMedia('audio/ogg; codecs=opus', data, 'voice.ogg');
+      const media = new MessageMedia(mime, data, `voice${ext}`);
       await client.sendMessage(chatId, media, { sendAudioAsVoice: true });
       const m = db.saveMessage(phone, 'out', 'audio', '🎵 Voice message', audioPath, true);
       io.emit('new_message', { phone, ...m });
@@ -159,6 +166,7 @@ async function sendBotResponse(chatId, phone, db, io, sfx = '') {
       try {
         if (!db.shouldSendReminder(phone)) return;
         const reminderText = db.getConfig('reminder_text') || REMINDER_DEFAULT;
+        if (!reminderText.trim()) return;
         await client.sendMessage(chatId, reminderText);
         const m = db.saveMessage(phone, 'out', 'text', reminderText, null, true);
         io.emit('new_message', { phone, ...m });

@@ -1,14 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1DB954"/>
-      <stop offset="100%" stop-color="#0E8A3A"/>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a44cc"/>
+      <stop offset="60%" stop-color="#0099ee"/>
+      <stop offset="100%" stop-color="#00ccff"/>
     </linearGradient>
+    <!-- Mask cuts the PCB traces out of the W, leaving them transparent -->
+    <mask id="m">
+      <rect width="100" height="100" fill="white"/>
+      <!-- PCB trace lines (black = transparent hole) -->
+      <line x1="80" y1="16" x2="91" y2="16" stroke="black" stroke-width="2.6" stroke-linecap="round"/>
+      <line x1="91" y1="16" x2="91" y2="28" stroke="black" stroke-width="2.6" stroke-linecap="round"/>
+      <line x1="84" y1="28" x2="91" y2="28" stroke="black" stroke-width="2.6" stroke-linecap="round"/>
+      <line x1="84" y1="28" x2="84" y2="38" stroke="black" stroke-width="2.6" stroke-linecap="round"/>
+      <line x1="84" y1="38" x2="92" y2="50" stroke="black" stroke-width="2.6" stroke-linecap="round"/>
+      <!-- PCB nodes -->
+      <circle cx="92" cy="14" r="4" fill="black"/>
+      <circle cx="84" cy="30" r="4" fill="black"/>
+      <circle cx="93" cy="52" r="4" fill="black"/>
+    </mask>
   </defs>
-  <!-- Rounded square background -->
-  <rect width="32" height="32" rx="8" fill="url(#bg)"/>
-  <!-- Chat bubble shape -->
-  <path d="M6 8.5C6 7.12 7.12 6 8.5 6h15C24.88 6 26 7.12 26 8.5v11c0 1.38-1.12 2.5-2.5 2.5H18l-4 4-4-4H8.5C7.12 22 6 20.88 6 19.5v-11z" fill="white" opacity="0.95"/>
-  <!-- Lightning bolt (automation symbol) -->
-  <path d="M17.5 9.5l-4 6h3.5l-1.5 7 5.5-8h-3.5z" fill="#1DB954"/>
+
+  <!-- W shape — outer minus inner hollow, filled with gradient, circuit cut out via mask -->
+  <path
+    fill="url(#g)"
+    mask="url(#m)"
+    d="M 5,10
+       L 27,88
+       L 50,45
+       L 73,88
+       L 95,10
+       L 83,10
+       L 73,63
+       L 50,56
+       L 27,63
+       L 17,10
+       Z"
+  />
 </svg>

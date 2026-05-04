@@ -124,9 +124,14 @@ function setConfig(key, value) {
   `).run(key, String(value));
 }
 
+function clearConversations() {
+  db.prepare('DELETE FROM messages').run();
+  db.prepare('DELETE FROM contacts').run();
+}
+
 module.exports = {
   upsertContact, getConversations, getMessages,
   saveMessage, isContactBotHandled, markBotHandled, markAsRead,
   markReminderSent, shouldSendReminder,
-  getConfig, getAllConfig, setConfig
+  getConfig, getAllConfig, setConfig, clearConversations
 };
