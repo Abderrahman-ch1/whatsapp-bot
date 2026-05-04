@@ -1314,10 +1314,6 @@ socket.on('authenticated', () => {
 
 socket.on('ready', async (info) => {
   state.connected = true;
-  if (!subscription.active) {
-    showSubscriptionGate(subscription);
-    return;
-  }
   if (!await ensureAuthenticated()) return;
   showDashboard(info);
   loadConversations();
@@ -1406,10 +1402,6 @@ async function init() {
   const status = await api('/api/status');
   if (status.connected) {
     state.connected = true;
-    if (!subscription.active) {
-      showSubscriptionGate(subscription);
-      return;
-    }
     if (!await ensureAuthenticated()) return;
     showDashboard(status.info);
     await loadConversations();
