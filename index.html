@@ -1312,9 +1312,10 @@ socket.on('authenticated', () => {
   setQRStatus('Authenticating…', false);
 });
 
-socket.on('ready', (info) => {
+socket.on('ready', async (info) => {
   state.connected = true;
   if (!subscription.active) return;
+  if (!await ensureAuthenticated()) return;
   showDashboard(info);
   loadConversations();
   loadConfig();
@@ -1402,10 +1403,22 @@ async function init() {
   const status = await api('/api/status');
   if (status.connected) {
     state.connected = true;
+    if (!await ensureAuthenticated()) return;
     showDashboard(status.info);
     await loadConversations();
     await loadConfig();
   }
+}
+
+async function ensureAuthenticated() {
+  const res = await fetch('/api/auth/check');
+  if (res.status === 401) {
+    document.getElementById('login-screen').classList.add('visible');
+    document.getElementById('connect-screen').style.display = 'none';
+    return false;
+  }
+  document.getElementById('login-screen').classList.remove('visible');
+  return true;
 }
 
 function showDashboard(info) {
@@ -2441,12 +2454,7 @@ function showSubscriptionScreen(view) {
     return;
   }
 
-  // 2. Check auth
-  const res = await fetch('/api/auth/check');
-  if (res.status === 401) {
-    document.getElementById('login-screen').classList.add('visible');
-    return;
-  }
+  // 2. Show QR/connect first. If already connected, init() will ask for login before dashboard.
   await init();
 })();
 

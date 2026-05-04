@@ -98,7 +98,7 @@ function init(io, db) {
     const lc = body.toLowerCase();
     let matchedSlot = null;
     if (!alreadyHandled) {
-      const slots = ['', '_2', '_3', '_4', '_5'];
+      const slots = getCampaignSlots(db);
       for (const sfx of slots) {
         const kw = db.getConfig(`trigger_keyword${sfx}`);
         if (kw && lc.includes(kw.toLowerCase())) { matchedSlot = sfx; break; }
@@ -117,6 +117,11 @@ function init(io, db) {
 
   console.log('🚀 Starting WhatsApp — this may take 30 seconds...');
   client.initialize();
+}
+
+function getCampaignSlots(db) {
+  const plan = db.getConfig('subscription_plan') || 'basic';
+  return plan === 'pro' ? ['', '_2', '_3', '_4', '_5'] : [''];
 }
 
 async function sendBotResponse(chatId, phone, db, io, sfx = '') {

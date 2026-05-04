@@ -372,7 +372,8 @@ function sendTelegram(text) {
 }
 
 // ── Status ────────────────────────────────────────────────
-app.get('/api/status', requireAuth, (req, res) => res.json(bot.getStatus()));
+// Public so the QR screen can be shown before dashboard login.
+app.get('/api/status', (req, res) => res.json(bot.getStatus()));
 
 // ── Conversations ─────────────────────────────────────────
 app.get('/api/conversations', requireAuth, (req, res) => res.json(db.getConversations()));
