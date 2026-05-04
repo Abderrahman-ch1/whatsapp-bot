@@ -2198,12 +2198,8 @@ async function removeCampaign(n) {
   activeCampaigns = activeCampaigns.filter(x => x !== n);
   delete currentImages[n];
   updateAddCampaignBtn();
-  saveActiveCampaigns();
-  // Clear config for this slot
-  const body = {};
-  body[`trigger_keyword_${n}`] = '';
-  body[`price_text_${n}`] = '';
-  await api('/api/config', 'POST', body);
+  await api(`/api/campaigns/${n}`, 'DELETE');
+  toast(`Campaign ${n} removed`, 'success');
 }
 
 function updateAddCampaignBtn() {

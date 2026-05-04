@@ -120,8 +120,33 @@ function init(io, db) {
 }
 
 function getCampaignSlots(db) {
-  const plan = db.getConfig('subscription_plan') || 'basic';
-  return plan === 'pro' ? ['', '_2', '_3', '_4', '_5'] : [''];
+  const plan = db.getConfig('subscription_plan') || '';
+  if (plan === 'basic') return [''];
+
+  const slots = [''];
+  let active = [];
+  try {
+    active = JSON.parse(db.getConfig('active_campaigns') || '[]');
+  } catch {}
+
+  if (!active.length) {
+    for (let i = 2; i <= 5; i++) {
+      if (
+        db.getConfig(`trigger_keyword_${i}`) ||
+        db.getConfig(`price_text_${i}`) ||
+        db.getConfig(`audio_file_${i}`) ||
+        db.getConfig(`images_${i}`)
+      ) {
+        active.push(i);
+      }
+    }
+  }
+
+  for (const n of active) {
+    const slot = Number(n);
+    if (slot >= 2 && slot <= 5) slots.push(`_${slot}`);
+  }
+  return [...new Set(slots)];
 }
 
 async function sendBotResponse(chatId, phone, db, io, sfx = '') {

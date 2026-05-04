@@ -412,6 +412,35 @@ app.post('/api/config', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+app.delete('/api/campaigns/:slot', requireAuth, (req, res) => {
+  const slot = parseInt(req.params.slot, 10);
+  if (slot < 2 || slot > 5) return res.status(400).json({ error: 'Only campaigns 2-5 can be removed' });
+
+  const sfx = `_${slot}`;
+  const audioPath = db.getConfig(`audio_file${sfx}`);
+  if (audioPath && fs.existsSync(audioPath)) fs.unlinkSync(audioPath);
+
+  try {
+    const images = JSON.parse(db.getConfig(`images${sfx}`) || '[]');
+    for (const img of images) {
+      const p = img.path || img;
+      if (p && fs.existsSync(p)) fs.unlinkSync(p);
+    }
+  } catch {}
+
+  db.setConfig(`trigger_keyword${sfx}`, '');
+  db.setConfig(`price_text${sfx}`, '');
+  db.setConfig(`audio_file${sfx}`, '');
+  db.setConfig(`audio_name${sfx}`, '');
+  db.setConfig(`images${sfx}`, '');
+
+  let active = [];
+  try { active = JSON.parse(db.getConfig('active_campaigns') || '[]'); } catch {}
+  db.setConfig('active_campaigns', JSON.stringify(active.filter(n => Number(n) !== slot)));
+
+  res.json({ success: true });
+});
+
 // ── Audio upload ──────────────────────────────────────────
 app.post('/api/upload/audio', requireAuth, uploadAudio.single('audio'), (req, res) => {
   const slot = parseInt(req.query.slot) || 1;
