@@ -1314,7 +1314,10 @@ socket.on('authenticated', () => {
 
 socket.on('ready', async (info) => {
   state.connected = true;
-  if (!subscription.active) return;
+  if (!subscription.active) {
+    showSubscriptionGate(subscription);
+    return;
+  }
   if (!await ensureAuthenticated()) return;
   showDashboard(info);
   loadConversations();
@@ -1403,6 +1406,10 @@ async function init() {
   const status = await api('/api/status');
   if (status.connected) {
     state.connected = true;
+    if (!subscription.active) {
+      showSubscriptionGate(subscription);
+      return;
+    }
     if (!await ensureAuthenticated()) return;
     showDashboard(status.info);
     await loadConversations();
@@ -2423,26 +2430,25 @@ function showSubscriptionScreen(view) {
   document.getElementById('sub-expired-view').style.display = view === 'expired' ? 'block' : 'none';
 }
 
+function showSubscriptionGate(sub) {
+  if (sub.expired) {
+    showSubscriptionScreen('expired');
+  } else if (sub.pending) {
+    showSubscriptionScreen('pending');
+  } else {
+    showSubscriptionScreen('select');
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════════════════
 (async () => {
-  // 1. Check subscription
+  // 1. Load subscription state, but let disconnected WhatsApp show the QR first.
   try {
     const subRes = await fetch('/api/subscription/status');
     const sub = await subRes.json();
     subscription = sub;
-
-    if (!sub.active) {
-      if (sub.expired) {
-        showSubscriptionScreen('expired');
-      } else if (sub.pending) {
-        showSubscriptionScreen('pending');
-      } else {
-        showSubscriptionScreen('select');
-      }
-      return;
-    }
 
     // Show renewal banner if ≤5 days left
     if (sub.daysLeft !== null && sub.daysLeft <= 5) {
@@ -2450,11 +2456,10 @@ function showSubscriptionScreen(view) {
       document.getElementById('renewal-banner').classList.add('visible');
     }
   } catch {
-    showSubscriptionScreen('select');
-    return;
+    subscription = { active: false, plan: '', daysLeft: null, pending: false, expired: false };
   }
 
-  // 2. Show QR/connect first. If already connected, init() will ask for login before dashboard.
+  // 2. Show QR/connect first. If already connected, init() will show the next gate.
   await init();
 })();
 
