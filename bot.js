@@ -219,7 +219,8 @@ async function sendText(tenantId, phone, text) {
   try {
     const chat = await state.client.getChatById(chatId);
     await chat.sendMessage(text);
-  } catch {
+  } catch (err) {
+    console.warn(`[${tenantId}] getChatById fallback:`, err.message);
     await state.client.sendMessage(chatId, text);
   }
 }

@@ -1820,6 +1820,30 @@ const state = {
 // ═══════════════════════════════════════════════════════════════
 const socket = io();
 
+// Re-join tenant room after socket.io reconnects (e.g. after Railway restart)
+socket.on('connect', () => {
+  if (currentTenantId) {
+    socket.emit('join-tenant', currentTenantId);
+    // Re-sync WhatsApp state in case it changed while disconnected
+    fetch('/api/status').then(r => r.json()).then(status => {
+      if (status.connected && !state.connected) {
+        state.connected = true;
+        if (subscription.active) {
+          showDashboard(status.info);
+          loadConversations();
+          loadConfig();
+        }
+      } else if (!status.connected && state.connected) {
+        state.connected = false;
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('app').classList.remove('app-visible');
+        document.getElementById('connect-screen').style.display = 'flex';
+        setQRStatus('qrDisconnected', false);
+      }
+    }).catch(() => {});
+  }
+});
+
 socket.on('qr', (qr) => {
   const appEl = document.getElementById('app');
   appEl.style.display = 'none';
@@ -2290,7 +2314,9 @@ async function sendMessage() {
       // Remove optimistic message and show error
       state.messages = state.messages.filter(m => m.id !== optimistic.id);
       document.querySelector(`[data-msgid="${optimistic.id}"]`)?.remove();
-      toast(data.error || 'Failed to send — is WhatsApp connected?', 'error');
+      const errMsg = data.error || 'Failed to send — is WhatsApp connected?';
+      console.error('[send]', res.status, errMsg);
+      toast('Send failed: ' + errMsg, 'error');
       input.value = text;
     }
   } catch {
