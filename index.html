@@ -2663,12 +2663,13 @@ function avatarLetter(name) {
 
 function relTime(iso) {
   if (!iso) return '';
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return 'now';
-  if (diff < 3600) return Math.floor(diff / 60) + 'm';
-  if (diff < 86400) return Math.floor(diff / 3600) + 'h';
-  if (diff < 604800) return Math.floor(diff / 86400) + 'd';
-  return new Date(iso).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  const timeStr = d.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit', hour12: false });
+  if (d.toDateString() === today.toDateString()) return timeStr;
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString('en', { month: 'short', day: 'numeric' });
 }
 
 function fmtTime(iso) {
