@@ -723,8 +723,10 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
   /* Prevent sub-pill from overflowing header on small screens */
   #sub-pill { font-size: 10px; }
 
-  /* Keep action buttons clear of the fixed language switcher */
-  .conn-row { padding-right: 150px; }
+  /* Keep all header content clear of the fixed language switcher */
+  .sidebar-header,
+  .settings-header { padding-right: 152px; }
+  .conn-row { padding-right: 0; }
 
   /* Conv item: ensure menu wrapper doesn't shrink chat area */
   .conv-info { min-width: 0; flex: 1; }
@@ -2258,6 +2260,10 @@ async function sendMessage() {
   const input = document.getElementById('msg-input');
   const text = input.value.trim();
   if (!text || !state.activePhone) return;
+  if (!state.connected) {
+    toast('WhatsApp is not connected — scan the QR first', 'error');
+    return;
+  }
 
   input.value = '';
   input.style.height = 'auto';
