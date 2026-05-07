@@ -103,12 +103,28 @@ bot.setIO(io);
 
 app.use(cors());
 app.use(express.json());
+
+// Block direct access to sensitive server-side files
+const BLOCKED_FILES = /\.(js|json|db|env|mjs|cjs|log|sqlite|sqlite3)$/i;
+const BLOCKED_NAMES = /^(server|bot|database|registry|package|yarn\.lock|package-lock|\.env|take_)/i;
+app.use((req, res, next) => {
+  const base = path.basename(req.path);
+  if (BLOCKED_FILES.test(base) && BLOCKED_NAMES.test(base)) return res.status(403).end();
+  next();
+});
+
 app.use(express.static(__dirname));
 
-// Per-tenant uploads (auth-protected)
+// Per-tenant uploads (auth-protected, path-traversal safe)
 app.get('/uploads/:tenantId/*', requireAuth, (req, res) => {
   if (req.params.tenantId !== req.tenantId) return res.status(403).end();
-  const filePath = path.join(DATA_DIR, 'tenants', req.params.tenantId, 'uploads', req.params[0]);
+  const relative = req.params[0];
+  // Block path traversal attempts
+  if (relative.includes('..') || path.isAbsolute(relative)) return res.status(403).end();
+  const tenantUploadsDir = path.join(DATA_DIR, 'tenants', req.params.tenantId, 'uploads');
+  const filePath = path.join(tenantUploadsDir, relative);
+  // Ensure resolved path stays within tenant uploads dir
+  if (!filePath.startsWith(tenantUploadsDir + path.sep) && filePath !== tenantUploadsDir) return res.status(403).end();
   if (!fs.existsSync(filePath)) return res.status(404).end();
   res.sendFile(filePath, { root: '/' });
 });
