@@ -217,11 +217,12 @@ async function sendText(tenantId, phone, text) {
   if (!state?.client || !state.connected) throw new Error('WhatsApp not connected');
   const chatId = phone.includes('@c.us') ? phone : `${phone}@c.us`;
   try {
-    const chat = await state.client.getChatById(chatId);
-    await chat.sendMessage(text);
-  } catch (err) {
-    console.warn(`[${tenantId}] getChatById fallback:`, err.message);
     await state.client.sendMessage(chatId, text);
+  } catch (err) {
+    // Normalize: Puppeteer sometimes propagates thrown strings from evaluate()
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[${tenantId}] sendText error:`, msg);
+    throw new Error(msg);
   }
 }
 

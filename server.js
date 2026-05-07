@@ -543,7 +543,9 @@ app.post('/api/send', requireAuth, async (req, res) => {
     io.to('tenant:' + req.tenantId).emit('new_message', { phone, ...msg });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[send error]', typeof err, err?.message, err?.stack || err);
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: msg });
   }
 });
 
