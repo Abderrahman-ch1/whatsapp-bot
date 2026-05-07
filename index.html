@@ -52,7 +52,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 #connect-screen {
   position: fixed; inset: 0; z-index: 100;
   display: none; align-items: center; justify-content: center;
-  background: var(--bg);
+  background: transparent;
   overflow-y: auto;
 }
 
@@ -755,7 +755,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 /* ── SUBSCRIPTION SCREEN ── */
 #sub-screen {
   display: none; position: fixed; inset: 0; z-index: 10000;
-  background: var(--bg); align-items: flex-start; justify-content: center;
+  background: transparent; align-items: flex-start; justify-content: center;
   overflow-y: auto; padding: 48px 16px 72px;
 }
 #sub-screen.visible { display: flex; }
@@ -893,7 +893,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 #login-screen {
   display: none;
   position: fixed; inset: 0; z-index: 9999;
-  background: var(--bg);
+  background: transparent;
   align-items: center; justify-content: center;
   overflow-y: auto; padding: 24px 16px;
 }
