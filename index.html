@@ -52,7 +52,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 #connect-screen {
   position: fixed; inset: 0; z-index: 100;
   display: flex; align-items: center; justify-content: center;
-  background: transparent;
+  background: var(--bg);
 }
 
 .connect-card {
@@ -1784,6 +1784,8 @@ const state = {
 const socket = io();
 
 socket.on('qr', (qr) => {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('connect-screen').style.display = 'flex';
   renderQR(qr);
   setQRStatus('qrScan', false);
 });
