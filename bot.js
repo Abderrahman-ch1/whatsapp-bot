@@ -10,6 +10,17 @@ const tenants = new Map();
 
 function setIO(io) { _io = io; }
 
+// Normalize a WhatsApp JID to a plain phone number string.
+// Handles @c.us, @lid, @s.whatsapp.net, etc.
+function jidToPhone(jid) { return String(jid || '').split('@')[0]; }
+
+// Build a valid send-to chatId from a stored phone number.
+function phoneToChatId(phone) {
+  // If phone somehow still has a domain (old DB data), strip it first
+  const num = phone.split('@')[0];
+  return `${num}@c.us`;
+}
+
 function emit(tenantId, event, data) {
   if (_io) _io.to('tenant:' + tenantId).emit(event, data);
 }
@@ -93,14 +104,14 @@ function initTenant(tenantId, db) {
 
   client.on('message_create', (msg) => {
     if (!msg.fromMe || msg.to.includes('@g.us')) return;
-    const phone = msg.to.replace('@c.us', '');
+    const phone = jidToPhone(msg.to);
     const saved = db.saveMessage(phone, 'out', 'text', msg.body || '', null, false);
     emit(tenantId, 'new_message', { phone, ...saved });
   });
 
   client.on('message', async (msg) => {
     if (msg.from.includes('@g.us')) return;
-    const phone = msg.from.replace('@c.us', '');
+    const phone = jidToPhone(msg.from);
     const body = msg.body || '';
     const contactName = msg._data?.notifyName || phone;
 
@@ -121,7 +132,7 @@ function initTenant(tenantId, db) {
 
     if (matchedSlot !== null) {
       await sleep(30000);
-      await sendBotResponse(tenantId, msg.from, phone, db, matchedSlot);
+      await sendBotResponse(tenantId, phoneToChatId(phone), phone, db, matchedSlot);
     }
   });
 
@@ -215,8 +226,8 @@ async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
 async function sendText(tenantId, phone, text) {
   const state = tenants.get(tenantId);
   if (!state?.client || !state.connected) throw new Error('WhatsApp not connected');
-  const chatId = phone.includes('@c.us') ? phone : `${phone}@c.us`;
-  console.log(`[${tenantId}] sendText → chatId=${chatId} text="${text}" connected=${state.connected} hasClient=${!!state.client} hasPupPage=${!!state.client?.pupPage}`);
+  const chatId = phoneToChatId(phone);
+  console.log(`[${tenantId}] sendText → chatId=${chatId} text="${text}" connected=${state.connected} hasClient=${!!state.client}`);
   try {
     const result = await state.client.sendMessage(chatId, text);
     console.log(`[${tenantId}] sendText ✓ result type=${typeof result}`);
