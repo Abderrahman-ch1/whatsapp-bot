@@ -216,13 +216,15 @@ async function sendText(tenantId, phone, text) {
   const state = tenants.get(tenantId);
   if (!state?.client || !state.connected) throw new Error('WhatsApp not connected');
   const chatId = phone.includes('@c.us') ? phone : `${phone}@c.us`;
+  console.log(`[${tenantId}] sendText → chatId=${chatId} text="${text}" connected=${state.connected} hasClient=${!!state.client} hasPupPage=${!!state.client?.pupPage}`);
   try {
-    await state.client.sendMessage(chatId, text);
+    const result = await state.client.sendMessage(chatId, text);
+    console.log(`[${tenantId}] sendText ✓ result type=${typeof result}`);
   } catch (err) {
-    // Normalize: Puppeteer sometimes propagates thrown strings from evaluate()
+    console.error(`[${tenantId}] sendText FAIL type=${typeof err} instanceof Error=${err instanceof Error} JSON=${JSON.stringify(err)} message=${err?.message} name=${err?.name}`);
+    console.error(`[${tenantId}] sendText FAIL raw:`, err);
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[${tenantId}] sendText error:`, msg);
-    throw new Error(msg);
+    throw new Error('Send failed: ' + msg);
   }
 }
 
