@@ -589,7 +589,8 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 #lightbox img { max-width: 90vw; max-height: 90vh; border-radius: var(--r); }
 
 /* ── MOBILE ONLY ELEMENTS ── */
-.mobile-back-btn, .mobile-settings-btn, .mobile-settings-close { display: none !important; }
+.mobile-back-btn { display: flex !important; }
+.mobile-settings-btn, .mobile-settings-close { display: none !important; }
 
 /* ══════════════════════════════════════════════════
    MOBILE  ≤ 767 px
@@ -2246,6 +2247,14 @@ function isMobile() { return window.innerWidth <= 767; }
 function mobileNav(view) {
   const app = document.getElementById('app');
   if (view === 'back') {
+    if (!isMobile()) {
+      // Desktop: close chat panel, return to empty state
+      state.activePhone = null;
+      document.getElementById('chat-view').style.display = 'none';
+      document.getElementById('chat-empty').style.display = '';
+      renderConvList();
+      return;
+    }
     const fromSettings = app.classList.contains('mobile-settings');
     app.classList.remove('mobile-chat', 'mobile-settings');
     if (fromSettings && state.activePhone) app.classList.add('mobile-chat');
