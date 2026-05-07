@@ -240,13 +240,16 @@ app.get('/admin', (req, res) => {
   const adminSecret = process.env.ADMIN_SECRET || 'admin123';
   if (secret !== adminSecret) return res.status(401).send('❌ Wrong secret');
 
+  const expiresRaw = db.getConfig('subscription_expires') || '';
+  const daysLeft = expiresRaw ? Math.ceil((new Date(expiresRaw) - Date.now()) / 86400000) : null;
   const sub = {
-    active:  db.getConfig('subscription_active') === '1',
-    plan:    db.getConfig('subscription_plan') || '—',
-    expires: db.getConfig('subscription_expires') || '—',
-    name:    db.getConfig('subscription_requester_name') || '—',
-    phone:   db.getConfig('subscription_requester_phone') || '—',
-    email:   db.getConfig('subscription_requester_email') || '—',
+    active:   db.getConfig('subscription_active') === '1',
+    plan:     db.getConfig('subscription_plan') || '—',
+    expires:  expiresRaw || '—',
+    daysLeft,
+    name:     db.getConfig('subscription_requester_name') || '—',
+    phone:    db.getConfig('subscription_requester_phone') || '—',
+    email:    db.getConfig('subscription_requester_email') || '—',
   };
 
   res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8">
@@ -284,6 +287,7 @@ app.get('/admin', (req, res) => {
     <div>Status: <span class="status ${sub.active ? 'active' : 'inactive'}">${sub.active ? 'ACTIVE' : 'INACTIVE'}</span></div>
     <div><strong>Client:</strong> ${sub.name} — ${sub.phone}</div>
     <div><strong>Plan:</strong> ${sub.plan} &nbsp;|&nbsp; <strong>Expires:</strong> ${sub.expires !== '—' ? new Date(sub.expires).toDateString() : '—'}</div>
+    ${sub.daysLeft !== null ? `<div><strong>Days remaining:</strong> <span style="font-weight:700;color:${sub.daysLeft <= 5 ? '#ef4444' : sub.daysLeft <= 15 ? '#f59e0b' : '#4facfe'}">${sub.daysLeft > 0 ? sub.daysLeft + ' days' : 'EXPIRED'}</span></div>` : ''}
   </div>
 
   <hr>
