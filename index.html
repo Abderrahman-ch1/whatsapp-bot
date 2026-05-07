@@ -1314,6 +1314,7 @@ socket.on('authenticated', () => {
 
 socket.on('ready', async (info) => {
   state.connected = true;
+  if (!subscription.active) { showSubscriptionGate(subscription); return; }
   if (!await ensureAuthenticated()) return;
   showDashboard(info);
   loadConversations();
@@ -1402,6 +1403,7 @@ async function init() {
   const status = await api('/api/status');
   if (status.connected) {
     state.connected = true;
+    if (!subscription.active) { showSubscriptionGate(subscription); return; }
     if (!await ensureAuthenticated()) return;
     showDashboard(status.info);
     await loadConversations();
@@ -2432,7 +2434,7 @@ function showSubscriptionGate(sub) {
 //  BOOT
 // ═══════════════════════════════════════════════════════════════
 (async () => {
-  // 1. Load subscription state, but let disconnected WhatsApp show the QR first.
+  // 1. Load subscription state.
   try {
     const subRes = await fetch('/api/subscription/status');
     const sub = await subRes.json();
@@ -2443,11 +2445,19 @@ function showSubscriptionGate(sub) {
       document.getElementById('renewal-days').textContent = sub.daysLeft;
       document.getElementById('renewal-banner').classList.add('visible');
     }
+
+    // Gate: if subscription is not active, show the subscription screen and stop.
+    if (!sub.active) {
+      showSubscriptionGate(sub);
+      return;
+    }
   } catch {
     subscription = { active: false, plan: '', daysLeft: null, pending: false, expired: false };
+    showSubscriptionScreen('select');
+    return;
   }
 
-  // 2. Show QR/connect first. If already connected, init() will show the next gate.
+  // 2. Subscription active — show QR/connect. init() will handle auth + dashboard.
   await init();
 })();
 
