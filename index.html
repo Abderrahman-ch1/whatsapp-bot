@@ -1484,6 +1484,7 @@ const translations = {
     credConfirmPw:     'Confirm New Password',
     credConfirmPwPh:   'Repeat new password',
     credSave:          'Save New Credentials',
+    daysLeft:          '{n}d left',
   },
   ar: {
     choosePlan:        'اختر خطتك',
@@ -1564,6 +1565,7 @@ const translations = {
     credConfirmPw:     'تأكيد كلمة المرور الجديدة',
     credConfirmPwPh:   'أعد كلمة المرور الجديدة',
     credSave:          'حفظ بيانات الدخول',
+    daysLeft:          'متبقي {n} يوم',
   },
   fr: {
     choosePlan:        'Choisissez votre plan',
@@ -1644,6 +1646,7 @@ const translations = {
     credConfirmPw:     'Confirmer le nouveau mot de passe',
     credConfirmPwPh:   'Répétez le nouveau mot de passe',
     credSave:          'Enregistrer les identifiants',
+    daysLeft:          '{n}j restants',
   }
 };
 
@@ -1676,6 +1679,9 @@ function setLanguage(lang) {
   // Re-apply dynamic QR status label
   const qrLabel = document.getElementById('qr-label');
   if (qrLabel) qrLabel.textContent = t[currentQRKey] || translations.en[currentQRKey] || currentQRKey;
+
+  // Re-render sub-pill with new language
+  if (typeof updateSubPill === 'function') updateSubPill();
 }
 
 // Apply on load
@@ -1825,11 +1831,23 @@ function showDashboard(info) {
   const name = info?.pushname || 'Connected';
   document.getElementById('conn-label').textContent = name;
 
+  // Always start with no conversation open
+  state.activePhone = null;
+  document.getElementById('chat-view').style.display = 'none';
+  document.getElementById('chat-empty').style.display = '';
+  document.getElementById('messages-wrap').innerHTML = '';
+
+  updateSubPill();
+}
+
+function updateSubPill() {
   const pill = document.getElementById('sub-pill');
   if (subscription.daysLeft !== null) {
+    const t = translations[currentLang] || translations.en;
     const color = subscription.daysLeft <= 5 ? 'var(--red)' : subscription.daysLeft <= 15 ? 'var(--amber)' : 'var(--green)';
-    const plan = subscription.plan === 'pro' ? 'Pro' : 'Basic';
-    pill.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0"></span><span>${plan} — <strong style="color:${color}">${subscription.daysLeft}d</strong> left</span>`;
+    const plan = subscription.plan === 'pro' ? (t.planPro || 'Pro') : (t.planBasic || 'Basic');
+    const daysText = (t.daysLeft || '{n}d left').replace('{n}', subscription.daysLeft);
+    pill.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0"></span><span>${plan} — <strong style="color:${color}">${daysText}</strong></span>`;
     pill.style.display = 'flex';
   }
 }
