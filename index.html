@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Whatsy</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" href="/favicon.svg">
@@ -705,14 +705,14 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
   /* Chat area tweaks */
   .msg { max-width: 88%; }
   .messages-wrap { padding: 16px 12px 8px; }
-  .input-area { padding: 8px 10px; }
+  .input-area { padding: 8px 10px; padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
   .chat-header { padding: 10px 12px; gap: 10px; }
 
   /* Settings close button position */
   .settings-header { position: relative; }
 
-  /* Toast — full width at bottom */
-  .toast-wrap { bottom: 12px; right: 12px; left: 12px; }
+  /* Toast — full width at bottom, above iOS home indicator */
+  .toast-wrap { bottom: max(12px, env(safe-area-inset-bottom, 0px)); right: 12px; left: 12px; }
   .toast { font-size: 12px; }
 
   /* Sidebar: make it a proper flex column so archive-toggle stays at bottom */
