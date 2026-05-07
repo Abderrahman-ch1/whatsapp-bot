@@ -10,15 +10,20 @@ const tenants = new Map();
 
 function setIO(io) { _io = io; }
 
-// Normalize a WhatsApp JID to a plain phone number string.
-// Handles @c.us, @lid, @s.whatsapp.net, etc.
-function jidToPhone(jid) { return String(jid || '').split('@')[0]; }
+// Normalize a WhatsApp JID for storage as the phone key.
+// @lid contacts must keep their domain so we can send back correctly.
+// All other domains (@c.us, @s.whatsapp.net, etc.) are stripped.
+function jidToPhone(jid) {
+  const s = String(jid || '');
+  if (s.endsWith('@lid')) return s; // keep full LID JID
+  return s.split('@')[0];           // strip @c.us etc.
+}
 
-// Build a valid send-to chatId from a stored phone number.
+// Build a valid send-to chatId from a stored phone value.
 function phoneToChatId(phone) {
-  // If phone somehow still has a domain (old DB data), strip it first
-  const num = phone.split('@')[0];
-  return `${num}@c.us`;
+  const s = String(phone || '');
+  if (s.includes('@')) return s;    // already has domain (@lid, etc.)
+  return `${s}@c.us`;              // plain number → standard JID
 }
 
 function emit(tenantId, event, data) {
