@@ -733,6 +733,10 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
   .login-title { font-size: 24px; }
 
   #sub-screen { padding: 32px 12px 48px; }
+  #sub-screen:has(#sub-pending-view[style*="block"]),
+  #sub-screen:has(#sub-expired-view[style*="block"]) {
+    align-items: center; justify-content: center; padding: 24px 16px;
+  }
   .sub-heading { font-size: 28px; }
   .sub-logo-name { font-size: 22px; }
   .sub-plan-card { padding: 24px 20px; }
@@ -1282,6 +1286,14 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
     <div id="chat-view" style="display:none; flex:1; display:none; flex-direction:column; overflow:hidden;">
       <div class="chat-header" id="chat-header"></div>
       <div class="messages-wrap" id="messages-wrap"></div>
+      <div class="input-area">
+        <input id="msg-input" type="text" data-i18n-placeholder="typeMessage" placeholder="Type a message…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}">
+        <button class="send-btn" onclick="sendMessage()" title="Send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
     </div>
   </main>
 
