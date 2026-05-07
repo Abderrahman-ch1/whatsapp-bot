@@ -8,31 +8,31 @@
 <link rel="apple-touch-icon" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:          #08090f;
-  --surface:     #0e0f1e;
-  --elevated:    #131428;
-  --hover:       #181932;
-  --active:      #1c1f3a;
-  --border:      #1e2240;
-  --border-soft: #2a2f56;
+  --bg:          #0b1422;
+  --surface:     #111d30;
+  --elevated:    #162540;
+  --hover:       #1c2f4e;
+  --active:      #20355a;
+  --border:      #1e3050;
+  --border-soft: #2e4568;
 
-  --green:       #4facfe;
-  --green-dim:   #2d8fe0;
-  --green-glow:  rgba(79,172,254,.12);
-  --green-glow2: rgba(79,172,254,.22);
-  --green-text:  #7dc4ff;
+  --green:       #5eb8ff;
+  --green-dim:   #3a9ae0;
+  --green-glow:  rgba(94,184,255,.12);
+  --green-glow2: rgba(94,184,255,.22);
+  --green-text:  #90ccff;
 
   --red:         #EF4444;
   --amber:       #F59E0B;
 
-  --t1: #e6efff;
-  --t2: #7a96bc;
-  --t3: #3d5578;
+  --t1: #e6f0ff;
+  --t2: #7a9ab8;
+  --t3: #3d5a7a;
 
   --r: 10px;
   --rs: 6px;
@@ -57,22 +57,35 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 
 .connect-card {
   display: flex; flex-direction: column; align-items: center; gap: 28px;
-  padding: 48px 56px;
-  background: rgba(14,15,30,0.92);
-  border: 1px solid var(--border);
-  border-radius: var(--rl);
-  box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(79,172,254,.08);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  padding: 48px 52px;
+  background: rgba(11,20,36,0.78);
+  border-radius: 24px;
+  box-shadow: 0 40px 100px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
   max-width: 440px; width: 100%; text-align: center;
+  position: relative; overflow: hidden;
+}
+.connect-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: 24px; pointer-events: none;
+  padding: 1px;
+  background: linear-gradient(145deg, rgba(94,184,255,.35) 0%, rgba(94,184,255,.06) 50%, rgba(61,88,120,.2) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.connect-card::after {
+  content: ''; position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+  width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(94,184,255,.08) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .connect-logo {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 10px; position: relative; z-index: 1;
 }
 .connect-logo svg { width: 36px; height: 36px; }
 .connect-logo span {
-  font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 800;
-  letter-spacing: -.03em; color: var(--t1);
+  font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400;
+  letter-spacing: -.01em; color: var(--t1);
 }
 .connect-logo .dot { color: var(--green); }
 
@@ -106,7 +119,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 }
 .qr-spinner {
   width: 32px; height: 32px;
-  border: 3px solid rgba(79,172,254,.2); border-top-color: var(--green);
+  border: 3px solid rgba(94,184,255,.2); border-top-color: var(--green);
   border-radius: 50%; animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -471,12 +484,15 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .hint { font-size: 11px; color: var(--t3); line-height: 1.5; }
 
 .btn-primary {
-  width: 100%; padding: 9px; border-radius: var(--rs);
-  background: var(--green); border: none; cursor: pointer;
-  font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: #000;
-  transition: background .15s, transform .1s;
+  width: 100%; padding: 12px; border-radius: 12px;
+  background: linear-gradient(135deg, #3a9ae0, #5eb8ff);
+  border: none; cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 600; color: #fff;
+  transition: opacity .15s, transform .1s, box-shadow .15s;
+  box-shadow: 0 4px 20px rgba(94,184,255,.28), 0 1px 0 rgba(255,255,255,.15) inset;
+  letter-spacing: .01em;
 }
-.btn-primary:hover { background: var(--green-dim); }
+.btn-primary:hover { opacity: .9; box-shadow: 0 6px 28px rgba(94,184,255,.4); }
 .btn-primary:active { transform: scale(.98); }
 
 .btn-outline {
@@ -653,78 +669,128 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 #sub-screen {
   display: none; position: fixed; inset: 0; z-index: 10000;
   background: transparent; align-items: flex-start; justify-content: center;
-  overflow-y: auto; padding: 40px 16px 60px;
+  overflow-y: auto; padding: 48px 16px 72px;
 }
 #sub-screen.visible { display: flex; }
 .sub-inner {
-  width: 100%; max-width: 720px; display: flex; flex-direction: column; align-items: center; gap: 32px;
+  width: 100%; max-width: 760px; display: flex; flex-direction: column; align-items: center; gap: 36px;
 }
 .sub-logo-wrap {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 4px;
 }
-.sub-logo-wrap svg { width: 36px; height: 36px; }
 .sub-logo-name {
-  font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 800; color: var(--t1); letter-spacing: -.02em;
+  font-family: 'DM Serif Display', serif; font-size: 28px; font-weight: 400; color: var(--t1); letter-spacing: -.01em;
 }
-.sub-heading { font-family: 'Inter', sans-serif; font-size: 36px; font-weight: 800; color: var(--t1); text-align: center; letter-spacing: -.04em; }
-.sub-sub { font-size: 15px; color: var(--t2); text-align: center; line-height: 1.6; }
+.sub-heading {
+  font-family: 'DM Serif Display', serif; font-size: 42px; font-weight: 400;
+  color: var(--t1); text-align: center; letter-spacing: -.01em; line-height: 1.15;
+}
+.sub-sub { font-size: 15px; color: var(--t2); text-align: center; line-height: 1.7; }
 
 .sub-plans {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px; width: 100%;
 }
 @media (max-width: 480px) { .sub-plans { grid-template-columns: 1fr; } }
 
 .sub-plan-card {
-  background: rgba(14,15,30,0.92); border: 1.5px solid var(--border);
-  border-radius: var(--rl); padding: 32px 28px; cursor: pointer;
-  transition: border-color .2s, transform .15s, box-shadow .2s;
-  display: flex; flex-direction: column; gap: 16px;
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 16px 48px rgba(0,0,0,.5);
+  background: rgba(11,20,36,0.72);
+  border-radius: 22px; padding: 36px 30px; cursor: pointer;
+  transition: transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s;
+  display: flex; flex-direction: column; gap: 20px;
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+  position: relative; overflow: hidden;
 }
-.sub-plan-card:hover { border-color: rgba(79,172,254,.35); transform: translateY(-3px); box-shadow: 0 24px 60px rgba(0,0,0,.6); }
-.sub-plan-card.selected { border-color: var(--green); box-shadow: 0 0 0 3px rgba(79,172,254,.15), 0 24px 60px rgba(0,0,0,.6); }
+.sub-plan-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: 22px; pointer-events: none;
+  padding: 1px;
+  background: linear-gradient(160deg, rgba(94,184,255,.22) 0%, rgba(94,184,255,.04) 60%, transparent 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  transition: opacity .22s;
+}
+.sub-plan-card::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(94,184,255,.4), transparent);
+  transition: opacity .22s;
+}
+.sub-plan-card:hover { transform: translateY(-6px); box-shadow: 0 32px 80px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.08); }
+.sub-plan-card.selected { transform: translateY(-4px); box-shadow: 0 0 0 2px rgba(94,184,255,.5), 0 28px 70px rgba(0,0,0,.6), 0 0 40px rgba(94,184,255,.12); }
+.sub-plan-card.selected::before { opacity: 1; }
+
 .sub-plan-card.pro-card { position: relative; }
-.sub-plan-badge {
-  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-  background: var(--green); color: #000; font-size: 10px; font-weight: 700;
-  letter-spacing: .08em; padding: 2px 10px; border-radius: 20px; white-space: nowrap;
+.sub-plan-card.pro-card::before {
+  background: linear-gradient(160deg, rgba(94,184,255,.45) 0%, rgba(94,184,255,.1) 50%, rgba(61,88,120,.15) 100%);
 }
-.sub-plan-name { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; color: var(--t1); letter-spacing: -.01em; }
-.sub-plan-price { font-size: 44px; font-weight: 800; color: var(--green); font-family: 'Inter', sans-serif; line-height: 1; letter-spacing: -.03em; }
-.sub-plan-price span { font-size: 14px; font-weight: 400; color: var(--t2); }
-.sub-plan-features { display: flex; flex-direction: column; gap: 9px; }
+.sub-plan-card.pro-card::after {
+  background: linear-gradient(90deg, transparent, rgba(94,184,255,.7), transparent);
+}
+.sub-plan-card.pro-card { box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 30px rgba(94,184,255,.08), inset 0 1px 0 rgba(255,255,255,.07); }
+
+.sub-plan-badge {
+  position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(90deg, #3a9ae0, #5eb8ff);
+  color: #fff; font-size: 9px; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .12em; padding: 3px 14px; border-radius: 0 0 12px 12px; white-space: nowrap;
+}
+.sub-plan-name {
+  font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; color: var(--t1); letter-spacing: -.01em;
+}
+.sub-plan-price {
+  font-family: 'DM Serif Display', serif; font-size: 56px; font-weight: 400;
+  color: var(--t1); line-height: 1; letter-spacing: -.02em;
+}
+.sub-plan-price span { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 400; color: var(--t2); letter-spacing: 0; }
+.sub-plan-features { display: flex; flex-direction: column; gap: 10px; padding-top: 4px; border-top: 1px solid rgba(94,184,255,.08); }
 .sub-plan-feature {
-  display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--t2);
+  display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--t2);
 }
 .sub-plan-feature svg { flex-shrink: 0; color: var(--green); }
 .sub-plan-feature.locked { color: var(--t3); }
 .sub-plan-feature.locked svg { color: var(--t3); }
 
 .sub-form {
-  width: 100%; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--rl); padding: 24px; display: flex; flex-direction: column; gap: 12px;
+  width: 100%; background: rgba(11,20,36,0.72);
+  border-radius: 22px; padding: 28px 28px; display: flex; flex-direction: column; gap: 14px;
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);
+  position: relative;
 }
-.sub-form-title { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: var(--t1); margin-bottom: 4px; }
+.sub-form::before {
+  content: ''; position: absolute; inset: 0; border-radius: 22px; pointer-events: none; padding: 1px;
+  background: linear-gradient(160deg, rgba(94,184,255,.22) 0%, rgba(94,184,255,.04) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.sub-form-title { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; color: var(--t1); margin-bottom: 2px; }
 .sub-selected-plan {
-  padding: 10px 14px; background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.2);
+  padding: 10px 14px; background: rgba(94,184,255,.07); border: 1px solid rgba(94,184,255,.18);
   border-radius: var(--r); font-size: 13px; color: var(--green); font-weight: 600;
   display: flex; align-items: center; justify-content: space-between;
 }
 .sub-change-plan {
   font-size: 11px; color: var(--t2); cursor: pointer; text-decoration: underline;
-  background: none; border: none; font-family: inherit;
+  background: none; border: none; font-family: inherit; transition: color .15s;
 }
 .sub-change-plan:hover { color: var(--t1); }
 
 .sub-state {
-  width: 100%; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--rl); padding: 48px 24px;
+  width: 100%; background: rgba(11,20,36,0.72);
+  border-radius: 22px; padding: 56px 32px;
   display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.05);
+  position: relative;
 }
-.sub-state-icon { font-size: 48px; }
-.sub-state-title { font-family: 'Inter', sans-serif; font-size: 20px; font-weight: 700; color: var(--t1); }
-.sub-state-text { font-size: 14px; color: var(--t2); line-height: 1.6; max-width: 340px; }
+.sub-state::before {
+  content: ''; position: absolute; inset: 0; border-radius: 22px; pointer-events: none; padding: 1px;
+  background: linear-gradient(160deg, rgba(94,184,255,.22) 0%, rgba(94,184,255,.04) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.sub-state-icon { font-size: 52px; }
+.sub-state-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; color: var(--t1); }
+.sub-state-text { font-size: 14px; color: var(--t2); line-height: 1.7; max-width: 340px; }
 
 /* Renewal banner */
 #renewal-banner {
@@ -746,44 +812,64 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 #login-screen.visible { display: flex; }
 
 .login-card {
-  width: 100%; max-width: 360px; padding: 40px 36px;
-  background: rgba(14,15,30,0.92);
-  border: 1px solid var(--border);
-  border-radius: var(--rl);
-  box-shadow: 0 24px 60px rgba(0,0,0,.7), 0 0 0 1px rgba(79,172,254,.08);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  display: flex; flex-direction: column; align-items: center; gap: 0;
+  width: 100%; max-width: 380px; padding: 48px 40px 44px;
+  background: rgba(11,20,36,0.78);
+  border-radius: 26px;
+  box-shadow: 0 40px 100px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+  display: flex; flex-direction: column; align-items: center;
+  position: relative; overflow: hidden;
+}
+.login-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: 26px; pointer-events: none; padding: 1px;
+  background: linear-gradient(145deg, rgba(94,184,255,.35) 0%, rgba(94,184,255,.06) 50%, rgba(61,88,120,.2) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.login-card::after {
+  content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+  width: 280px; height: 280px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(94,184,255,.09) 0%, transparent 70%);
+  pointer-events: none;
 }
 
-.login-logo { margin-bottom: 20px; }
-.login-logo svg { width: 52px; height: 52px; }
+.login-logo {
+  margin-bottom: 16px; position: relative; z-index: 1;
+  width: 64px; height: 64px; border-radius: 18px;
+  background: rgba(94,184,255,.08); border: 1px solid rgba(94,184,255,.18);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 30px rgba(94,184,255,.12);
+}
 
 .login-title {
-  font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 700;
-  color: var(--t1); letter-spacing: -0.02em; margin-bottom: 6px;
+  font-family: 'DM Serif Display', serif; font-size: 28px; font-weight: 400;
+  color: var(--t1); letter-spacing: -0.01em; margin-bottom: 6px;
+  position: relative; z-index: 1;
 }
 
 .login-sub {
-  font-size: 13px; color: var(--t2); margin-bottom: 28px; text-align: center;
+  font-size: 13px; color: var(--t2); margin-bottom: 32px; text-align: center;
+  position: relative; z-index: 1;
 }
 
-#login-form { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+#login-form { width: 100%; display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 1; }
 
 .login-field input {
-  width: 100%; padding: 11px 14px;
-  background: var(--elevated); border: 1px solid var(--border-soft);
-  border-radius: var(--r); color: var(--t1); font-size: 14px; font-family: 'Inter', sans-serif;
-  outline: none; transition: border-color .18s, box-shadow .18s;
+  width: 100%; padding: 12px 16px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(94,184,255,.12);
+  border-radius: 12px; color: var(--t1); font-size: 14px; font-family: 'Inter', sans-serif;
+  outline: none; transition: border-color .18s, box-shadow .18s, background .18s;
 }
 .login-field input:focus {
-  border-color: var(--green); box-shadow: 0 0 0 3px var(--green-glow);
+  border-color: rgba(94,184,255,.45); background: rgba(94,184,255,.05);
+  box-shadow: 0 0 0 3px rgba(94,184,255,.1);
 }
 .login-field input::placeholder { color: var(--t3); }
 
 .login-field-pw { position: relative; }
-.login-field-pw input { padding-right: 42px; }
+.login-field-pw input { padding-right: 44px; }
 .show-pw-btn {
-  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
   background: none; border: none; color: var(--t3); cursor: pointer; padding: 4px;
   display: flex; align-items: center; transition: color .15s;
 }
@@ -794,15 +880,42 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 }
 
 .login-btn {
-  width: 100%; padding: 12px;
-  background: var(--green); color: #fff; border: none; border-radius: var(--r);
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, #3a9ae0, #5eb8ff);
+  color: #fff; border: none; border-radius: 12px;
   font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
-  cursor: pointer; transition: background .18s, transform .12s, box-shadow .18s;
-  box-shadow: 0 4px 20px rgba(34,197,94,.3);
+  cursor: pointer; transition: opacity .18s, transform .12s, box-shadow .18s;
+  box-shadow: 0 4px 24px rgba(94,184,255,.3), 0 1px 0 rgba(255,255,255,.15) inset;
+  letter-spacing: .01em;
 }
-.login-btn:hover { background: var(--green-dim); box-shadow: 0 4px 24px rgba(34,197,94,.45); }
+.login-btn:hover { opacity: .9; box-shadow: 0 6px 32px rgba(94,184,255,.45); }
 .login-btn:active { transform: scale(.97); }
-.login-btn:disabled { opacity: .6; cursor: not-allowed; }
+.login-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── LANGUAGE SWITCHER ── */
+#lang-switcher {
+  position: fixed; top: 18px; right: 20px; z-index: 99999;
+  display: flex; align-items: center; gap: 2px;
+  background: rgba(11,20,36,0.72); border-radius: 10px; padding: 3px;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(94,184,255,.15);
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+.lang-btn {
+  padding: 5px 11px; border-radius: 7px; border: none; cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+  letter-spacing: .04em; color: var(--t2);
+  background: transparent; transition: background .15s, color .15s;
+}
+.lang-btn:hover { color: var(--t1); background: rgba(94,184,255,.08); }
+.lang-btn.active { background: rgba(94,184,255,.15); color: var(--green); }
+
+/* RTL support */
+[dir="rtl"] .sub-plan-feature { flex-direction: row-reverse; }
+[dir="rtl"] .sub-selected-plan { flex-direction: row-reverse; }
+[dir="rtl"] .sub-form-title { text-align: right; }
+[dir="rtl"] .sub-heading, [dir="rtl"] .sub-sub { direction: rtl; }
+[dir="rtl"] .login-title, [dir="rtl"] .login-sub { direction: rtl; }
 
 /* ── RECORD ── */
 .record-row {
@@ -837,6 +950,13 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 <body>
 <canvas id="particle-canvas"></canvas>
 
+<!-- ── LANGUAGE SWITCHER ── -->
+<div id="lang-switcher">
+  <button class="lang-btn active" onclick="setLanguage('en')" id="lang-en">EN</button>
+  <button class="lang-btn" onclick="setLanguage('ar')" id="lang-ar">AR</button>
+  <button class="lang-btn" onclick="setLanguage('fr')" id="lang-fr">FR</button>
+</div>
+
 <!-- ═══════════════════════════════ SUBSCRIPTION SCREEN ═══════════════════════════════ -->
 <div id="sub-screen">
   <div class="sub-inner">
@@ -849,55 +969,53 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
     <!-- Plan selection -->
     <div id="sub-select-view" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:24px">
       <div>
-        <h1 class="sub-heading">Choose your plan</h1>
-        <p class="sub-sub" style="margin-top:8px">Start automating your WhatsApp in minutes</p>
+        <h1 class="sub-heading" data-i18n="choosePlan">Choose your plan</h1>
+        <p class="sub-sub" style="margin-top:8px" data-i18n="choosePlanSub">Start automating your WhatsApp in minutes</p>
       </div>
 
       <div class="sub-plans">
         <!-- Basic -->
         <div class="sub-plan-card" id="plan-basic" onclick="selectPlan('basic')">
           <div>
-            <div class="sub-plan-name">Basic</div>
-            <div class="sub-plan-price">$15<span>/mo</span></div>
+            <div class="sub-plan-name" data-i18n="planBasic">Basic</div>
+            <div class="sub-plan-price">$15<span data-i18n="perMonth">/mo</span></div>
           </div>
           <div class="sub-plan-features">
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>1 campaign</div>
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Voice messages</div>
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Product images</div>
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Follow-up reminder</div>
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Manual chat reply</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="feat1Campaign">1 campaign</span></div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="featVoice">Voice messages</span></div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="featImages">Product images</span></div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="featReminder">Follow-up reminder</span></div>
           </div>
         </div>
         <!-- Pro -->
         <div class="sub-plan-card pro-card" id="plan-pro" onclick="selectPlan('pro')">
-          <div class="sub-plan-badge">RECOMMENDED</div>
+          <div class="sub-plan-badge" data-i18n="recommended">RECOMMENDED</div>
           <div>
-            <div class="sub-plan-name">Pro</div>
-            <div class="sub-plan-price">$25<span>/mo</span></div>
+            <div class="sub-plan-name" data-i18n="planPro">Pro</div>
+            <div class="sub-plan-price">$25<span data-i18n="perMonth">/mo</span></div>
           </div>
           <div class="sub-plan-features">
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Up to 5 campaigns</div>
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Voice messages</div>
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Product images</div>
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Follow-up reminder</div>
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Manual chat reply</div>
-            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Priority support</div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="feat5Campaigns">Up to 5 campaigns</span></div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="featVoice">Voice messages</span></div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="featImages">Product images</span></div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="featReminder">Follow-up reminder</span></div>
+            <div class="sub-plan-feature"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="featSupport">Priority support</span></div>
           </div>
         </div>
       </div>
 
       <!-- Request form (shown after selecting plan) -->
       <div class="sub-form" id="sub-form-wrap" style="display:none">
-        <div class="sub-form-title">Your details</div>
+        <div class="sub-form-title" data-i18n="yourDetails">Your details</div>
         <div class="sub-selected-plan">
           <span id="sub-plan-display">—</span>
-          <button class="sub-change-plan" onclick="clearPlanSelection()">Change plan</button>
+          <button class="sub-change-plan" onclick="clearPlanSelection()" data-i18n="changePlan">Change plan</button>
         </div>
-        <input type="text" class="field-input" id="sub-name" placeholder="Your name *">
-        <input type="text" class="field-input" id="sub-phone" placeholder="Your WhatsApp number *">
-        <input type="email" class="field-input" id="sub-email" placeholder="Email (optional)">
+        <input type="text" class="field-input" id="sub-name" data-i18n-placeholder="placeholderName" placeholder="Your name *">
+        <input type="text" class="field-input" id="sub-phone" data-i18n-placeholder="placeholderPhone" placeholder="Your WhatsApp number *">
+        <input type="email" class="field-input" id="sub-email" data-i18n-placeholder="placeholderEmail" placeholder="Email (optional)">
         <div id="sub-form-error" style="font-size:12px;color:var(--red);display:none"></div>
-        <button class="btn-primary" id="sub-submit-btn" onclick="submitPlanRequest()">Request Access →</button>
+        <button class="btn-primary" id="sub-submit-btn" onclick="submitPlanRequest()" data-i18n="requestAccess">Request Access →</button>
       </div>
     </div>
 
@@ -905,8 +1023,8 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
     <div id="sub-pending-view" style="display:none;width:100%">
       <div class="sub-state">
         <div class="sub-state-icon">⏳</div>
-        <div class="sub-state-title">Request received!</div>
-        <div class="sub-state-text">We'll review your request and contact you to complete payment. Your app will be activated within 24 hours.</div>
+        <div class="sub-state-title" data-i18n="pendingTitle">Request received!</div>
+        <div class="sub-state-text" data-i18n="pendingText">We'll review your request and contact you to complete payment. Your app will be activated within 24 hours.</div>
       </div>
     </div>
 
@@ -914,8 +1032,8 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
     <div id="sub-expired-view" style="display:none;width:100%">
       <div class="sub-state">
         <div class="sub-state-icon">🔒</div>
-        <div class="sub-state-title">Subscription expired</div>
-        <div class="sub-state-text">Your subscription has ended. Contact us to renew and get back to business immediately.</div>
+        <div class="sub-state-title" data-i18n="expiredTitle">Subscription expired</div>
+        <div class="sub-state-text" data-i18n="expiredText">Your subscription has ended. Contact us to renew and get back to business immediately.</div>
       </div>
     </div>
 
@@ -929,12 +1047,13 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
       <img src="/favicon.svg" width="56" height="56" alt="Whatsy">
     </div>
     <h1 class="login-title">Whatsy</h1>
-    <p class="login-sub">Sign in to your dashboard</p>
+    <p class="login-sub" data-i18n="loginSub">Sign in to your dashboard</p>
     <form id="login-form" onsubmit="handleLogin(event)">
       <div class="login-field">
         <input
           id="login-username"
           type="text"
+          data-i18n-placeholder="placeholderUsername"
           placeholder="Username"
           autocomplete="username"
           required
@@ -944,6 +1063,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         <input
           id="login-password"
           type="password"
+          data-i18n-placeholder="placeholderPassword"
           placeholder="Password"
           autocomplete="current-password"
           required
@@ -961,7 +1081,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
       </div>
       <div id="login-error" class="login-error"></div>
       <button type="submit" class="login-btn" id="login-btn">
-        <span id="login-btn-text">Sign in</span>
+        <span id="login-btn-text" data-i18n="signIn">Sign in</span>
       </button>
     </form>
   </div>
@@ -1288,6 +1408,133 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
+//  i18n — TRANSLATIONS
+// ═══════════════════════════════════════════════════════════════
+const translations = {
+  en: {
+    choosePlan:        'Choose your plan',
+    choosePlanSub:     'Start automating your WhatsApp in minutes',
+    planBasic:         'Basic',
+    planPro:           'Pro',
+    perMonth:          '/mo',
+    recommended:       'RECOMMENDED',
+    feat1Campaign:     '1 campaign',
+    feat5Campaigns:    'Up to 5 campaigns',
+    featVoice:         'Voice messages',
+    featImages:        'Product images',
+    featReminder:      'Follow-up reminder',
+    featSupport:       'Priority support',
+    yourDetails:       'Your details',
+    changePlan:        'Change plan',
+    placeholderName:   'Your name *',
+    placeholderPhone:  'Your WhatsApp number *',
+    placeholderEmail:  'Email (optional)',
+    requestAccess:     'Request Access →',
+    pendingTitle:      'Request received!',
+    pendingText:       "We'll review your request and contact you to complete payment. Your app will be activated within 24 hours.",
+    expiredTitle:      'Subscription expired',
+    expiredText:       'Your subscription has ended. Contact us to renew and get back to business immediately.',
+    loginSub:          'Sign in to your dashboard',
+    placeholderUsername: 'Username',
+    placeholderPassword: 'Password',
+    signIn:            'Sign in',
+    planLabelBasic:    'Basic — $15/month (1 campaign)',
+    planLabelPro:      'Pro — $25/month (up to 5 campaigns)',
+  },
+  ar: {
+    choosePlan:        'اختر خطتك',
+    choosePlanSub:     'ابدأ أتمتة واتساب الخاص بك في دقائق',
+    planBasic:         'أساسي',
+    planPro:           'احترافي',
+    perMonth:          '/شهر',
+    recommended:       'الأفضل',
+    feat1Campaign:     'حملة واحدة',
+    feat5Campaigns:    'حتى 5 حملات',
+    featVoice:         'رسائل صوتية',
+    featImages:        'صور المنتجات',
+    featReminder:      'تذكير متابعة',
+    featSupport:       'دعم أولوية',
+    yourDetails:       'بياناتك',
+    changePlan:        'تغيير الخطة',
+    placeholderName:   'اسمك *',
+    placeholderPhone:  'رقم واتساب *',
+    placeholderEmail:  'البريد الإلكتروني (اختياري)',
+    requestAccess:     'طلب الوصول ←',
+    pendingTitle:      'تم استلام الطلب!',
+    pendingText:       'سنراجع طلبك ونتواصل معك لإتمام الدفع. سيتم تفعيل تطبيقك خلال 24 ساعة.',
+    expiredTitle:      'انتهى الاشتراك',
+    expiredText:       'لقد انتهى اشتراكك. تواصل معنا للتجديد والعودة إلى العمل فوراً.',
+    loginSub:          'تسجيل الدخول إلى لوحة التحكم',
+    placeholderUsername: 'اسم المستخدم',
+    placeholderPassword: 'كلمة المرور',
+    signIn:            'دخول',
+    planLabelBasic:    'أساسي — 15$/شهر (حملة واحدة)',
+    planLabelPro:      'احترافي — 25$/شهر (حتى 5 حملات)',
+  },
+  fr: {
+    choosePlan:        'Choisissez votre plan',
+    choosePlanSub:     'Commencez à automatiser votre WhatsApp en quelques minutes',
+    planBasic:         'Basique',
+    planPro:           'Pro',
+    perMonth:          '/mois',
+    recommended:       'RECOMMANDÉ',
+    feat1Campaign:     '1 campagne',
+    feat5Campaigns:    "Jusqu'à 5 campagnes",
+    featVoice:         'Messages vocaux',
+    featImages:        'Images produits',
+    featReminder:      'Rappel de suivi',
+    featSupport:       'Support prioritaire',
+    yourDetails:       'Vos informations',
+    changePlan:        'Changer de plan',
+    placeholderName:   'Votre nom *',
+    placeholderPhone:  'Votre numéro WhatsApp *',
+    placeholderEmail:  'Email (optionnel)',
+    requestAccess:     'Demander l\'accès →',
+    pendingTitle:      'Demande reçue !',
+    pendingText:       'Nous examinerons votre demande et vous contacterons pour finaliser le paiement. Votre application sera activée dans les 24 heures.',
+    expiredTitle:      'Abonnement expiré',
+    expiredText:       'Votre abonnement a pris fin. Contactez-nous pour renouveler et reprendre votre activité immédiatement.',
+    loginSub:          'Connectez-vous à votre tableau de bord',
+    placeholderUsername: 'Nom d\'utilisateur',
+    placeholderPassword: 'Mot de passe',
+    signIn:            'Se connecter',
+    planLabelBasic:    'Basique — 15$/mois (1 campagne)',
+    planLabelPro:      'Pro — 25$/mois (jusqu\'à 5 campagnes)',
+  }
+};
+
+let currentLang = localStorage.getItem('whatsy_lang') || 'en';
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('whatsy_lang', lang);
+
+  // Update active button
+  ['en','ar','fr'].forEach(l => {
+    document.getElementById('lang-' + l).classList.toggle('active', l === lang);
+  });
+
+  // RTL for Arabic
+  document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+
+  const t = translations[lang];
+
+  // Translate text content
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key] !== undefined) el.textContent = t[key];
+  });
+
+  // Translate placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key] !== undefined) el.placeholder = t[key];
+  });
+}
+
+// Apply on load
+document.addEventListener('DOMContentLoaded', () => setLanguage(currentLang));
+// ═══════════════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════════════
 const state = {
@@ -1415,6 +1662,7 @@ async function init() {
 async function ensureAuthenticated() {
   const res = await fetch('/api/auth/check');
   if (res.status === 401) {
+    document.getElementById('sub-screen').classList.remove('visible');
     document.getElementById('login-screen').classList.add('visible');
     document.getElementById('connect-screen').style.display = 'none';
     return false;
@@ -2378,7 +2626,8 @@ function selectPlan(plan) {
   selectedPlan = plan;
   document.getElementById('plan-basic').classList.toggle('selected', plan === 'basic');
   document.getElementById('plan-pro').classList.toggle('selected', plan === 'pro');
-  const labels = { basic: 'Basic — $15/month (1 campaign)', pro: 'Pro — $25/month (up to 5 campaigns)' };
+  const t = translations[currentLang] || translations.en;
+  const labels = { basic: t.planLabelBasic, pro: t.planLabelPro };
   document.getElementById('sub-plan-display').textContent = labels[plan];
   document.getElementById('sub-form-wrap').style.display = 'flex';
   document.getElementById('sub-form-wrap').style.flexDirection = 'column';
@@ -2430,6 +2679,7 @@ async function submitPlanRequest() {
 
 function showSubscriptionScreen(view) {
   document.getElementById('sub-screen').classList.add('visible');
+  document.getElementById('login-screen').classList.remove('visible');
   document.getElementById('app').style.display = 'none';
   document.getElementById('connect-screen').style.display = 'none';
   document.getElementById('sub-select-view').style.display  = view === 'select'  ? 'flex' : 'none';
@@ -2502,21 +2752,22 @@ function showSubscriptionGate(sub) {
       vy: (Math.random() - 0.5) * 0.38,
       r:  Math.random() * 1.6 + 0.7,
       a:  Math.random() * 0.55 + 0.25,
-      c:  Math.random() > 0.45 ? '#4facfe' : '#6496ff',
+      c:  Math.random() > 0.45 ? '#5eb8ff' : '#7aaad4',
     }));
   }
 
   function frame() {
-    // Draw gradient bg
-    const g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    g.addColorStop(0, '#08090f');
-    g.addColorStop(1, '#0f1022');
+    // Draw gradient bg — dark navy top → slate blue bottom (matches reference)
+    const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    g.addColorStop(0,   '#0b1422');
+    g.addColorStop(0.5, '#1a2d48');
+    g.addColorStop(1,   '#3d5878');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Subtle radial glow at centre-top
     const glow = ctx.createRadialGradient(canvas.width * 0.5, 0, 0, canvas.width * 0.5, 0, canvas.height * 0.55);
-    glow.addColorStop(0, 'rgba(79,172,254,0.06)');
+    glow.addColorStop(0, 'rgba(94,184,255,0.07)');
     glow.addColorStop(1, 'transparent');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -2529,7 +2780,7 @@ function showSubscriptionGate(sub) {
         const d  = Math.sqrt(dx * dx + dy * dy);
         if (d < 130) {
           ctx.beginPath();
-          ctx.strokeStyle = `rgba(79,172,254,${(1 - d / 130) * 0.13})`;
+          ctx.strokeStyle = `rgba(94,184,255,${(1 - d / 130) * 0.15})`;
           ctx.lineWidth = 0.5;
           ctx.moveTo(pts[i].x, pts[i].y);
           ctx.lineTo(pts[j].x, pts[j].y);
