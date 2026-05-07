@@ -197,7 +197,7 @@ app.get('/api/admin/grant', (req, res) => {
   const adminSecret = process.env.ADMIN_SECRET || 'admin123';
   if (secret !== adminSecret) return res.status(401).send('❌ Wrong secret');
 
-  const numDays = parseInt(days) || 30;
+  const numDays = days !== undefined ? parseInt(days, 10) : 30;
   if (numDays <= 0) {
     db.setConfig('subscription_active', '0');
     db.setConfig('subscription_pending', '0');
