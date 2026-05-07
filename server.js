@@ -131,6 +131,7 @@ app.get('/uploads/:tenantId/*', requireAuth, (req, res) => {
 
 // Dynamic per-tenant multer storage
 const uploadAudio = multer({
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB max
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
       const dir = path.join(DATA_DIR, 'tenants', req.tenantId, 'uploads', 'audio');
@@ -142,6 +143,7 @@ const uploadAudio = multer({
 });
 
 const uploadImages = multer({
+  limits: { fileSize: 10 * 1024 * 1024, files: 20 }, // 10 MB per image, 20 max
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
       const dir = path.join(DATA_DIR, 'tenants', req.tenantId, 'uploads', 'images');
@@ -151,6 +153,24 @@ const uploadImages = multer({
     filename: (req, file, cb) => cb(null, `${Date.now()}_${file.originalname}`),
   }),
 });
+
+// ── Login rate limiting (5 attempts per 15 min per IP) ───────────
+const loginAttempts = new Map();
+function checkLoginRate(ip) {
+  const now = Date.now();
+  const window = 15 * 60 * 1000;
+  const max = 5;
+  const entry = loginAttempts.get(ip) || { count: 0, reset: now + window };
+  if (now > entry.reset) { entry.count = 0; entry.reset = now + window; }
+  entry.count++;
+  loginAttempts.set(ip, entry);
+  return entry.count <= max;
+}
+// Clean old entries every 30 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of loginAttempts) if (now > entry.reset) loginAttempts.delete(ip);
+}, 30 * 60 * 1000);
 
 // ── Auth routes ──────────────────────────────────────────────────
 app.get('/api/auth/check', (req, res) => {
@@ -162,6 +182,8 @@ app.get('/api/auth/check', (req, res) => {
 });
 
 app.post('/api/auth/login', (req, res) => {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress;
+  if (!checkLoginRate(ip)) return res.status(429).json({ error: 'Too many attempts. Try again in 15 minutes.' });
   const { username, password } = req.body;
   const result = registry.verifyLogin(username, password);
   if (!result) return res.status(401).json({ error: 'Wrong username or password' });
@@ -575,12 +597,16 @@ function sendTelegram(text) {
 }
 
 // ── Start ─────────────────────────────────────────────────────────
-// Eagerly start bots for all active tenants
-const activeTenants = registry.getAllTenants().filter(t => t.active === 1 && t.daysLeft > 0);
-for (const t of activeTenants) {
-  console.log(`🔄 Starting bot for tenant: ${t.id}`);
-  bot.initTenant(t.id, getTenantDB(t.id));
-}
-
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`\n🌐 Open http://localhost:${PORT} in your browser\n`));
+server.listen(PORT, () => {
+  console.log(`\n🌐 Open http://localhost:${PORT} in your browser\n`);
+
+  // Stagger bot startup: one every 8 seconds to avoid RAM spike on restart
+  const activeTenants = registry.getAllTenants().filter(t => t.active === 1 && t.daysLeft > 0);
+  activeTenants.forEach((t, i) => {
+    setTimeout(() => {
+      console.log(`🔄 [${i + 1}/${activeTenants.length}] Starting bot for tenant: ${t.id}`);
+      bot.initTenant(t.id, getTenantDB(t.id));
+    }, i * 8000);
+  });
+});
