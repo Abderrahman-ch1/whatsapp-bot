@@ -1103,22 +1103,22 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
     <div id="qr-wrap">
       <div class="qr-placeholder">
         <div class="qr-spinner"></div>
-        <span>Generating QR code...</span>
+        <span data-i18n="qrGenerating">Generating QR code...</span>
       </div>
     </div>
 
     <div class="connect-steps">
       <div class="step">
         <div class="step-num">1</div>
-        <span>Open WhatsApp on your phone</span>
+        <span data-i18n="qrStep1">Open WhatsApp on your phone</span>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <span>Tap Menu (⋮) → Linked Devices</span>
+        <span data-i18n="qrStep2">Tap Menu (⋮) → Linked Devices</span>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <span>Tap "Link a Device" and scan the QR code above</span>
+        <span data-i18n="qrStep3">Tap "Link a Device" and scan the QR code above</span>
       </div>
     </div>
   </div>
@@ -1440,6 +1440,14 @@ const translations = {
     signIn:            'Sign in',
     planLabelBasic:    'Basic — $15/month (1 campaign)',
     planLabelPro:      'Pro — $25/month (up to 5 campaigns)',
+    qrStarting:        'Starting WhatsApp...',
+    qrGenerating:      'Generating QR code...',
+    qrScan:            'Scan with your phone to connect',
+    qrAuthenticating:  'Authenticating…',
+    qrDisconnected:    'Disconnected. Reconnecting…',
+    qrStep1:           'Open WhatsApp on your phone',
+    qrStep2:           'Tap Menu (⋮) → Linked Devices',
+    qrStep3:           'Tap "Link a Device" and scan the QR code above',
   },
   ar: {
     choosePlan:        'اختر خطتك',
@@ -1470,6 +1478,14 @@ const translations = {
     signIn:            'دخول',
     planLabelBasic:    'أساسي — 15$/شهر (حملة واحدة)',
     planLabelPro:      'احترافي — 25$/شهر (حتى 5 حملات)',
+    qrStarting:        '...جاري تشغيل واتساب',
+    qrGenerating:      '...جاري إنشاء رمز QR',
+    qrScan:            'امسح الرمز بهاتفك للاتصال',
+    qrAuthenticating:  '...جاري المصادقة',
+    qrDisconnected:    'انقطع الاتصال. جاري إعادة الاتصال...',
+    qrStep1:           'افتح واتساب على هاتفك',
+    qrStep2:           'اضغط القائمة (⋮) ← الأجهزة المرتبطة',
+    qrStep3:           'اضغط "ربط جهاز" وامسح رمز QR أعلاه',
   },
   fr: {
     choosePlan:        'Choisissez votre plan',
@@ -1500,10 +1516,19 @@ const translations = {
     signIn:            'Se connecter',
     planLabelBasic:    'Basique — 15$/mois (1 campagne)',
     planLabelPro:      'Pro — 25$/mois (jusqu\'à 5 campagnes)',
+    qrStarting:        'Démarrage de WhatsApp...',
+    qrGenerating:      'Génération du QR code...',
+    qrScan:            'Scannez avec votre téléphone pour vous connecter',
+    qrAuthenticating:  'Authentification…',
+    qrDisconnected:    'Déconnecté. Reconnexion…',
+    qrStep1:           'Ouvrez WhatsApp sur votre téléphone',
+    qrStep2:           'Appuyez sur Menu (⋮) → Appareils liés',
+    qrStep3:           'Appuyez sur "Lier un appareil" et scannez le QR code',
   }
 };
 
 let currentLang = localStorage.getItem('whatsy_lang') || 'en';
+let currentQRKey = 'qrStarting';
 
 function setLanguage(lang) {
   currentLang = lang;
@@ -1530,6 +1555,10 @@ function setLanguage(lang) {
     const key = el.getAttribute('data-i18n-placeholder');
     if (t[key] !== undefined) el.placeholder = t[key];
   });
+
+  // Re-apply dynamic QR status label
+  const qrLabel = document.getElementById('qr-label');
+  if (qrLabel) qrLabel.textContent = t[currentQRKey] || translations.en[currentQRKey] || currentQRKey;
 }
 
 // Apply on load
@@ -1553,11 +1582,11 @@ const socket = io();
 
 socket.on('qr', (qr) => {
   renderQR(qr);
-  setQRStatus('Scan with your phone to connect', false);
+  setQRStatus('qrScan', false);
 });
 
 socket.on('authenticated', () => {
-  setQRStatus('Authenticating…', false);
+  setQRStatus('qrAuthenticating', false);
 });
 
 socket.on('ready', async (info) => {
@@ -1573,7 +1602,7 @@ socket.on('disconnected', () => {
   state.connected = false;
   document.getElementById('app').style.display = 'none';
   document.getElementById('connect-screen').style.display = 'flex';
-  setQRStatus('Disconnected. Reconnecting…', false);
+  setQRStatus('qrDisconnected', false);
 });
 
 socket.on('new_message', (msg) => {
@@ -1639,8 +1668,10 @@ function renderQR(qrStr) {
   });
 }
 
-function setQRStatus(text, isConnected) {
-  document.getElementById('qr-label').textContent = text;
+function setQRStatus(key, isConnected) {
+  currentQRKey = key;
+  const t = translations[currentLang] || translations.en;
+  document.getElementById('qr-label').textContent = t[key] || translations.en[key] || key;
   document.getElementById('qr-dot').classList.toggle('connected', isConnected);
 }
 
