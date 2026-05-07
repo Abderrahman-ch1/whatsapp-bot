@@ -668,7 +668,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
   #qr-wrap { min-width: 200px; min-height: 200px; }
 
   /* Override grid — stack panels as absolute layers */
-  #app, #app.settings-hidden {
+  #app.app-visible, #app.app-visible.settings-hidden {
     display: block !important;
     position: relative;
     height: 100vh;
@@ -722,6 +722,9 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 
   /* Prevent sub-pill from overflowing header on small screens */
   #sub-pill { font-size: 10px; }
+
+  /* Keep action buttons clear of the fixed language switcher */
+  .conn-row { padding-right: 150px; }
 
   /* Conv item: ensure menu wrapper doesn't shrink chat area */
   .conv-info { min-width: 0; flex: 1; }
@@ -1815,7 +1818,9 @@ const state = {
 const socket = io();
 
 socket.on('qr', (qr) => {
-  document.getElementById('app').style.display = 'none';
+  const appEl = document.getElementById('app');
+  appEl.style.display = 'none';
+  appEl.classList.remove('app-visible');
   document.getElementById('connect-screen').style.display = 'flex';
   renderQR(qr);
   setQRStatus('qrScan', false);
@@ -1836,7 +1841,9 @@ socket.on('ready', async (info) => {
 
 socket.on('disconnected', () => {
   state.connected = false;
-  document.getElementById('app').style.display = 'none';
+  const appEl = document.getElementById('app');
+  appEl.style.display = 'none';
+  appEl.classList.remove('app-visible');
   document.getElementById('connect-screen').style.display = 'flex';
   setQRStatus('qrDisconnected', false);
 });
@@ -1945,7 +1952,9 @@ async function ensureAuthenticated() {
 
 function showDashboard(info) {
   document.getElementById('connect-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'grid';
+  const appEl = document.getElementById('app');
+  appEl.style.display = 'grid';
+  appEl.classList.add('app-visible');
   const name = info?.pushname || 'Connected';
   document.getElementById('conn-label').textContent = name;
 
@@ -3044,7 +3053,9 @@ async function submitPlanRequest() {
 function showSubscriptionScreen(view) {
   document.getElementById('sub-screen').classList.add('visible');
   document.getElementById('login-screen').classList.remove('visible');
-  document.getElementById('app').style.display = 'none';
+  const appEl = document.getElementById('app');
+  appEl.style.display = 'none';
+  appEl.classList.remove('app-visible');
   document.getElementById('connect-screen').style.display = 'none';
   document.getElementById('sub-select-view').style.display  = view === 'select'  ? 'flex' : 'none';
   document.getElementById('sub-pending-view').style.display = view === 'pending' ? 'block' : 'none';
