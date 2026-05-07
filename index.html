@@ -910,12 +910,6 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .lang-btn:hover { color: var(--t1); background: rgba(94,184,255,.08); }
 .lang-btn.active { background: rgba(94,184,255,.15); color: var(--green); }
 
-/* RTL support */
-[dir="rtl"] .sub-plan-feature { flex-direction: row-reverse; }
-[dir="rtl"] .sub-selected-plan { flex-direction: row-reverse; }
-[dir="rtl"] .sub-form-title { text-align: right; }
-[dir="rtl"] .sub-heading, [dir="rtl"] .sub-sub { direction: rtl; }
-[dir="rtl"] .login-title, [dir="rtl"] .login-sub { direction: rtl; }
 
 /* ── RECORD ── */
 .record-row {
@@ -1166,12 +1160,12 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
         </svg>
-        <input type="text" id="search" placeholder="Search conversations…">
+        <input type="text" id="search" data-i18n-placeholder="searchPlaceholder" placeholder="Search conversations…">
       </div>
       <div class="sidebar-tabs">
-        <button class="sidebar-tab active" id="tab-all" onclick="switchTab('all')">All</button>
+        <button class="sidebar-tab active" id="tab-all" onclick="switchTab('all')" data-i18n="tabAll">All</button>
         <button class="sidebar-tab" id="tab-followups" onclick="switchTab('followups')">
-          Needs Reply
+          <span data-i18n="tabNeedsReply">Needs Reply</span>
           <span class="tab-badge" id="followup-badge" style="display:none"></span>
         </button>
       </div>
@@ -1181,7 +1175,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
         </svg>
-        <p>No conversations yet.<br>Messages from customers will appear here.</p>
+        <p data-i18n="noConversations">No conversations yet. Messages from customers will appear here.</p>
       </div>
     </div>
   </aside>
@@ -1192,8 +1186,8 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
       <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
       </svg>
-      <h3>Select a conversation</h3>
-      <p>Choose a customer from the left to start chatting</p>
+      <h3 data-i18n="selectConv">Select a conversation</h3>
+      <p data-i18n="selectConvSub">Choose a customer from the left to start chatting</p>
     </div>
     <div id="chat-view" style="display:none; flex:1; display:none; flex-direction:column; overflow:hidden;">
       <div class="chat-header" id="chat-header"></div>
@@ -1207,7 +1201,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2">
         <circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
       </svg>
-      <h2>Bot Configuration</h2>
+      <h2 data-i18n="botConfig">Bot Configuration</h2>
       <button class="icon-btn mobile-settings-close" onclick="mobileNav('back')" title="Close settings">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -1222,13 +1216,13 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
           </svg>
-          Trigger Keyword
+          <span data-i18n="triggerKeyword">Trigger Keyword</span>
         </div>
         <div>
-          <label class="field-label">When customer sends this word, bot replies automatically</label>
-          <input type="text" class="field-input" id="s-trigger" placeholder="e.g. Hi, Price, Info, Hello">
+          <label class="field-label" data-i18n="triggerLabel">When customer sends this word, bot replies automatically</label>
+          <input type="text" class="field-input" id="s-trigger" data-i18n-placeholder="triggerPlaceholder" placeholder="e.g. Hi, Price, Info, Hello">
         </div>
-        <p class="hint">Leave empty to disable auto-reply. The bot replies to the <strong>first</strong> message only.</p>
+        <p class="hint" data-i18n="triggerHint">Leave empty to disable auto-reply. The bot replies to the first message only.</p>
       </div>
 
       <!-- Price text -->
@@ -1237,13 +1231,13 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
           </svg>
-          Welcome Message / Prices
+          <span data-i18n="welcomeTitle">Welcome Message / Prices</span>
         </div>
         <div>
-          <label class="field-label">Text message sent before audio and images</label>
+          <label class="field-label" data-i18n="welcomeLabel">Text message sent before audio and images</label>
           <textarea class="field-input" id="s-price" placeholder="Welcome! Here are our prices:&#10;&#10;Product A - $XX&#10;Product B - $XX&#10;&#10;Check the images below 👇"></textarea>
         </div>
-        <button class="btn-primary" id="save-config-btn">Save Configuration</button>
+        <button class="btn-primary" id="save-config-btn" data-i18n="saveConfig">Save Configuration</button>
       </div>
 
       <!-- Audio -->
@@ -1252,9 +1246,9 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z"/>
           </svg>
-          Voice Message
+          <span data-i18n="voiceTitle">Voice Message</span>
         </div>
-        <p class="hint">Upload your pre-recorded audio. It will be sent as a WhatsApp voice note.</p>
+        <p class="hint" data-i18n="voiceHint">Upload your pre-recorded audio. It will be sent as a WhatsApp voice note.</p>
         <div id="audio-preview" style="display:none">
           <div class="audio-preview">
             <button class="play-btn" id="preview-play">
@@ -1274,21 +1268,21 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
-          Click to upload audio or drag & drop<br>
-          <span style="font-size:11px;color:var(--t3)">MP3, OGG, M4A, WAV supported</span>
+          <span data-i18n="uploadAudio">Click to upload audio or drag & drop</span><br>
+          <span style="font-size:11px;color:var(--t3)" data-i18n="uploadAudioFmt">MP3, OGG, M4A, WAV supported</span>
         </div>
         <div class="record-row">
-          <span style="font-size:11px;color:var(--t3)">or</span>
+          <span style="font-size:11px;color:var(--t3)" data-i18n="orText">or</span>
           <button class="record-btn" id="record-btn" onclick="toggleRecording(1)">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/><line x1="9" y1="21" x2="15" y2="21" stroke="currentColor" stroke-width="2"/></svg>
-            Record voice note
+            <span data-i18n="recordBtn">Record voice note</span>
           </button>
           <span class="record-timer" id="record-timer" style="display:none">
             <span class="record-dot"></span><span id="record-time">0:00</span>
           </span>
           <button class="record-stop-btn" id="record-stop-btn" style="display:none" onclick="stopRecording(1)">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-            Stop
+            <span data-i18n="stopBtn">Stop</span>
           </button>
         </div>
       </div>
@@ -1300,17 +1294,17 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
             <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
             <polyline points="21 15 16 10 5 21"/>
           </svg>
-          Product Images
+          <span data-i18n="imagesTitle">Product Images</span>
         </div>
-        <p class="hint">These images are sent after the audio. Max 20 images.</p>
+        <p class="hint" data-i18n="imagesHint">These images are sent after the audio. Max 20 images.</p>
         <div class="images-grid" id="images-grid"></div>
         <div class="upload-zone" id="images-zone">
           <input type="file" id="images-input" accept="image/*" multiple>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
-          Click to upload images or drag & drop<br>
-          <span style="font-size:11px;color:var(--t3)">JPG, PNG, WEBP supported</span>
+          <span data-i18n="uploadImages">Click to upload images or drag & drop</span><br>
+          <span style="font-size:11px;color:var(--t3)" data-i18n="uploadImagesFmt">JPG, PNG, WEBP supported</span>
         </div>
       </div>
 
@@ -1322,7 +1316,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Add Campaign
+        <span data-i18n="addCampaign">Add Campaign</span>
       </button>
 
       <!-- Reminder Message -->
@@ -1331,16 +1325,16 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
           </svg>
-          Follow-up Reminder
+          <span data-i18n="reminderTitle">Follow-up Reminder</span>
         </div>
-        <p class="hint">Sent automatically 15 minutes after the bot campaign if the client hasn't replied.</p>
+        <p class="hint" data-i18n="reminderHint">Sent automatically 15 minutes after the bot campaign if the client hasn't replied.</p>
         <div>
-          <label class="field-label">Reminder message</label>
-          <textarea class="field-input" id="s-reminder" rows="3" placeholder="e.g. Hi! Can you share your name, address and phone number?"></textarea>
+          <label class="field-label" data-i18n="reminderLabel">Reminder message</label>
+          <textarea class="field-input" id="s-reminder" rows="3" data-i18n-placeholder="reminderPlaceholder" placeholder="e.g. Hi! Can you share your name, address and phone number?"></textarea>
         </div>
-        <button class="btn-primary" id="save-reminder-btn">Save Reminder</button>
+        <button class="btn-primary" id="save-reminder-btn" data-i18n="saveReminder">Save Reminder</button>
         <div id="reminder-preview" style="display:none;margin-top:10px;padding:11px 13px;background:var(--elevated);border:1px solid var(--border);border-radius:var(--r);border-left:3px solid var(--amber)">
-          <div style="font-size:10px;font-weight:600;color:var(--amber);letter-spacing:.06em;margin-bottom:6px">⏰ WILL SEND AFTER 15 MIN</div>
+          <div style="font-size:10px;font-weight:600;color:var(--amber);letter-spacing:.06em;margin-bottom:6px" data-i18n="reminderBadge">⏰ WILL SEND AFTER 15 MIN</div>
           <div id="reminder-preview-text" style="font-size:13px;color:var(--t1);line-height:1.5;direction:rtl;text-align:right"></div>
         </div>
       </div>
@@ -1353,45 +1347,45 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 <div id="cred-modal" onclick="if(event.target===this)closeCredModal()" style="display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:28px;width:100%;max-width:360px;box-shadow:0 24px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:16px">
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--t1)">Change Credentials</span>
+      <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--t1)" data-i18n="credTitle">Change Credentials</span>
       <button onclick="closeCredModal()" style="background:none;border:none;color:var(--t2);cursor:pointer;padding:4px;display:flex;align-items:center">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div>
-        <label class="field-label">Current Password</label>
+        <label class="field-label" data-i18n="credCurrentPw">Current Password</label>
         <div class="login-field-pw" style="position:relative">
-          <input type="password" class="field-input" id="cred-current-pw" placeholder="Enter current password" style="padding-right:38px">
+          <input type="password" class="field-input" id="cred-current-pw" data-i18n-placeholder="credCurrentPwPh" placeholder="Enter current password" style="padding-right:38px">
           <button type="button" class="show-pw-btn" onclick="togglePw('cred-current-pw')" tabindex="-1">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
       </div>
       <div>
-        <label class="field-label">New Username</label>
-        <input type="text" class="field-input" id="cred-new-username" placeholder="New username">
+        <label class="field-label" data-i18n="credNewUsername">New Username</label>
+        <input type="text" class="field-input" id="cred-new-username" data-i18n-placeholder="credNewUsernamePh" placeholder="New username">
       </div>
       <div>
-        <label class="field-label">New Password</label>
+        <label class="field-label" data-i18n="credNewPw">New Password</label>
         <div class="login-field-pw" style="position:relative">
-          <input type="password" class="field-input" id="cred-new-pw" placeholder="Min. 6 characters" style="padding-right:38px">
+          <input type="password" class="field-input" id="cred-new-pw" data-i18n-placeholder="credNewPwPh" placeholder="Min. 6 characters" style="padding-right:38px">
           <button type="button" class="show-pw-btn" onclick="togglePw('cred-new-pw')" tabindex="-1">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
       </div>
       <div>
-        <label class="field-label">Confirm New Password</label>
+        <label class="field-label" data-i18n="credConfirmPw">Confirm New Password</label>
         <div class="login-field-pw" style="position:relative">
-          <input type="password" class="field-input" id="cred-confirm-pw" placeholder="Repeat new password" style="padding-right:38px">
+          <input type="password" class="field-input" id="cred-confirm-pw" data-i18n-placeholder="credConfirmPwPh" placeholder="Repeat new password" style="padding-right:38px">
           <button type="button" class="show-pw-btn" onclick="togglePw('cred-confirm-pw')" tabindex="-1">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
       </div>
       <div id="cred-error" style="font-size:12.5px;color:var(--red);min-height:16px"></div>
-      <button class="btn-primary" id="save-cred-btn" onclick="changeCredentials()">Save New Credentials</button>
+      <button class="btn-primary" id="save-cred-btn" onclick="changeCredentials()" data-i18n="credSave">Save New Credentials</button>
     </div>
   </div>
 </div>
@@ -1448,6 +1442,48 @@ const translations = {
     qrStep1:           'Open WhatsApp on your phone',
     qrStep2:           'Tap Menu (⋮) → Linked Devices',
     qrStep3:           'Tap "Link a Device" and scan the QR code above',
+    searchPlaceholder: 'Search conversations…',
+    tabAll:            'All',
+    tabNeedsReply:     'Needs Reply',
+    noConversations:   'No conversations yet. Messages from customers will appear here.',
+    selectConv:        'Select a conversation',
+    selectConvSub:     'Choose a customer from the left to start chatting',
+    botConfig:         'Bot Configuration',
+    triggerKeyword:    'Trigger Keyword',
+    triggerLabel:      'When customer sends this word, bot replies automatically',
+    triggerPlaceholder:'e.g. Hi, Price, Info, Hello',
+    triggerHint:       'Leave empty to disable auto-reply. The bot replies to the first message only.',
+    welcomeTitle:      'Welcome Message / Prices',
+    welcomeLabel:      'Text message sent before audio and images',
+    saveConfig:        'Save Configuration',
+    voiceTitle:        'Voice Message',
+    voiceHint:         'Upload your pre-recorded audio. It will be sent as a WhatsApp voice note.',
+    uploadAudio:       'Click to upload audio or drag & drop',
+    uploadAudioFmt:    'MP3, OGG, M4A, WAV supported',
+    orText:            'or',
+    recordBtn:         'Record voice note',
+    stopBtn:           'Stop',
+    imagesTitle:       'Product Images',
+    imagesHint:        'These images are sent after the audio. Max 20 images.',
+    uploadImages:      'Click to upload images or drag & drop',
+    uploadImagesFmt:   'JPG, PNG, WEBP supported',
+    addCampaign:       'Add Campaign',
+    reminderTitle:     'Follow-up Reminder',
+    reminderHint:      "Sent automatically 15 minutes after the bot campaign if the client hasn't replied.",
+    reminderLabel:     'Reminder message',
+    reminderPlaceholder: 'e.g. Hi! Can you share your name, address and phone number?',
+    saveReminder:      'Save Reminder',
+    reminderBadge:     '⏰ WILL SEND AFTER 15 MIN',
+    credTitle:         'Change Credentials',
+    credCurrentPw:     'Current Password',
+    credCurrentPwPh:   'Enter current password',
+    credNewUsername:   'New Username',
+    credNewUsernamePh: 'New username',
+    credNewPw:         'New Password',
+    credNewPwPh:       'Min. 6 characters',
+    credConfirmPw:     'Confirm New Password',
+    credConfirmPwPh:   'Repeat new password',
+    credSave:          'Save New Credentials',
   },
   ar: {
     choosePlan:        'اختر خطتك',
@@ -1486,6 +1522,48 @@ const translations = {
     qrStep1:           'افتح واتساب على هاتفك',
     qrStep2:           'اضغط القائمة (⋮) ← الأجهزة المرتبطة',
     qrStep3:           'اضغط "ربط جهاز" وامسح رمز QR أعلاه',
+    searchPlaceholder: 'ابحث عن محادثة...',
+    tabAll:            'الكل',
+    tabNeedsReply:     'يحتاج رد',
+    noConversations:   'لا توجد محادثات بعد. ستظهر رسائل العملاء هنا.',
+    selectConv:        'اختر محادثة',
+    selectConvSub:     'اختر عميلاً من القائمة لبدء المحادثة',
+    botConfig:         'إعداد البوت',
+    triggerKeyword:    'كلمة التفعيل',
+    triggerLabel:      'عندما يرسل العميل هذه الكلمة، يرد البوت تلقائياً',
+    triggerPlaceholder:'مثال: مرحبا، سعر، معلومات',
+    triggerHint:       'اتركه فارغاً لتعطيل الرد التلقائي. يرد البوت على الرسالة الأولى فقط.',
+    welcomeTitle:      'رسالة الترحيب / الأسعار',
+    welcomeLabel:      'رسالة نصية ترسل قبل الصوت والصور',
+    saveConfig:        'حفظ الإعدادات',
+    voiceTitle:        'رسالة صوتية',
+    voiceHint:         'ارفع صوتك المسجل. سيُرسل كرسالة صوتية واتساب.',
+    uploadAudio:       'انقر لرفع الصوت أو اسحب وأفلت',
+    uploadAudioFmt:    'يدعم MP3, OGG, M4A, WAV',
+    orText:            'أو',
+    recordBtn:         'تسجيل رسالة صوتية',
+    stopBtn:           'إيقاف',
+    imagesTitle:       'صور المنتج',
+    imagesHint:        'تُرسل هذه الصور بعد الصوت. الحد الأقصى 20 صورة.',
+    uploadImages:      'انقر لرفع الصور أو اسحب وأفلت',
+    uploadImagesFmt:   'يدعم JPG, PNG, WEBP',
+    addCampaign:       'إضافة حملة',
+    reminderTitle:     'تذكير المتابعة',
+    reminderHint:      'يُرسل تلقائياً بعد 15 دقيقة من حملة البوت إذا لم يرد العميل.',
+    reminderLabel:     'رسالة التذكير',
+    reminderPlaceholder: 'مثال: مرحبا! هل يمكنك مشاركة اسمك وعنوانك ورقم هاتفك؟',
+    saveReminder:      'حفظ التذكير',
+    reminderBadge:     '⏰ سيُرسل بعد 15 دقيقة',
+    credTitle:         'تغيير بيانات الدخول',
+    credCurrentPw:     'كلمة المرور الحالية',
+    credCurrentPwPh:   'أدخل كلمة المرور الحالية',
+    credNewUsername:   'اسم المستخدم الجديد',
+    credNewUsernamePh: 'اسم المستخدم الجديد',
+    credNewPw:         'كلمة المرور الجديدة',
+    credNewPwPh:       '6 أحرف على الأقل',
+    credConfirmPw:     'تأكيد كلمة المرور الجديدة',
+    credConfirmPwPh:   'أعد كلمة المرور الجديدة',
+    credSave:          'حفظ بيانات الدخول',
   },
   fr: {
     choosePlan:        'Choisissez votre plan',
@@ -1524,6 +1602,48 @@ const translations = {
     qrStep1:           'Ouvrez WhatsApp sur votre téléphone',
     qrStep2:           'Appuyez sur Menu (⋮) → Appareils liés',
     qrStep3:           'Appuyez sur "Lier un appareil" et scannez le QR code',
+    searchPlaceholder: 'Rechercher...',
+    tabAll:            'Tous',
+    tabNeedsReply:     'À répondre',
+    noConversations:   'Pas encore de conversations. Les messages apparaîtront ici.',
+    selectConv:        'Sélectionnez une conversation',
+    selectConvSub:     'Choisissez un client à gauche pour commencer',
+    botConfig:         'Configuration du bot',
+    triggerKeyword:    'Mot déclencheur',
+    triggerLabel:      'Quand le client envoie ce mot, le bot répond automatiquement',
+    triggerPlaceholder:'ex. Bonjour, Prix, Info',
+    triggerHint:       'Laissez vide pour désactiver la réponse auto. Le bot répond au premier message uniquement.',
+    welcomeTitle:      'Message de bienvenue / Prix',
+    welcomeLabel:      'Message texte envoyé avant l\'audio et les images',
+    saveConfig:        'Enregistrer la configuration',
+    voiceTitle:        'Message vocal',
+    voiceHint:         'Téléchargez votre audio pré-enregistré. Il sera envoyé comme note vocale WhatsApp.',
+    uploadAudio:       'Cliquez pour télécharger ou glissez-déposez',
+    uploadAudioFmt:    'MP3, OGG, M4A, WAV supportés',
+    orText:            'ou',
+    recordBtn:         'Enregistrer une note vocale',
+    stopBtn:           'Arrêter',
+    imagesTitle:       'Images produits',
+    imagesHint:        'Ces images sont envoyées après l\'audio. Max 20 images.',
+    uploadImages:      'Cliquez pour télécharger ou glissez-déposez',
+    uploadImagesFmt:   'JPG, PNG, WEBP supportés',
+    addCampaign:       'Ajouter une campagne',
+    reminderTitle:     'Rappel de suivi',
+    reminderHint:      'Envoyé automatiquement 15 min après la campagne si le client n\'a pas répondu.',
+    reminderLabel:     'Message de rappel',
+    reminderPlaceholder: 'ex. Bonjour! Pouvez-vous partager votre nom, adresse et téléphone?',
+    saveReminder:      'Enregistrer le rappel',
+    reminderBadge:     '⏰ SERA ENVOYÉ APRÈS 15 MIN',
+    credTitle:         'Changer les identifiants',
+    credCurrentPw:     'Mot de passe actuel',
+    credCurrentPwPh:   'Entrez le mot de passe actuel',
+    credNewUsername:   'Nouveau nom d\'utilisateur',
+    credNewUsernamePh: 'Nouveau nom d\'utilisateur',
+    credNewPw:         'Nouveau mot de passe',
+    credNewPwPh:       'Min. 6 caractères',
+    credConfirmPw:     'Confirmer le nouveau mot de passe',
+    credConfirmPwPh:   'Répétez le nouveau mot de passe',
+    credSave:          'Enregistrer les identifiants',
   }
 };
 
@@ -1538,9 +1658,6 @@ function setLanguage(lang) {
   ['en','ar','fr'].forEach(l => {
     document.getElementById('lang-' + l).classList.toggle('active', l === lang);
   });
-
-  // RTL for Arabic
-  document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
 
   const t = translations[lang];
 
