@@ -80,21 +80,29 @@ class TenantDB {
     return this.db.prepare('SELECT * FROM messages WHERE phone = ? ORDER BY created_at ASC').all(phone);
   }
 
-  saveMessage(phone, direction, type, content, filePath, isBot, countUnread = true) {
+  saveMessage(phone, direction, type, content, filePath, isBot, countUnread = true, tsUnix = null) {
+    // Use real WhatsApp timestamp when provided, otherwise server time
+    const createdAt = tsUnix
+      ? new Date(tsUnix * 1000).toISOString()
+      : new Date().toISOString();
+
     const result = this.db.prepare(`
-      INSERT INTO messages (phone, direction, type, content, file_path, bot)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(phone, direction, type, content, filePath || null, isBot ? 1 : 0);
+      INSERT INTO messages (phone, direction, type, content, file_path, bot, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(phone, direction, type, content, filePath || null, isBot ? 1 : 0, createdAt);
 
     const unreadInc = direction === 'in' && countUnread ? ', unread = unread + 1' : '';
-    this.db.prepare(`UPDATE contacts SET last_message_at = datetime('now')${unreadInc} WHERE phone = ?`).run(phone);
+    const tsExpr = tsUnix
+      ? `datetime(${Math.floor(tsUnix)}, 'unixepoch')`
+      : `datetime('now')`;
+    this.db.prepare(`UPDATE contacts SET last_message_at = ${tsExpr}${unreadInc} WHERE phone = ?`).run(phone);
 
     return {
       id: result.lastInsertRowid,
       phone, direction, type, content,
       file_path: filePath || null,
       bot: isBot ? 1 : 0,
-      created_at: new Date().toISOString(),
+      created_at: createdAt,
     };
   }
 

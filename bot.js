@@ -107,10 +107,21 @@ function initTenant(tenantId, db) {
     setTimeout(() => { try { client.initialize(); } catch {} }, 3000);
   });
 
+  // When the admin reads a chat on their phone, unread drops to 0 → clear it in the app too
+  client.on('chat_update', (chat) => {
+    if (chat.id?.server === 'g.us') return; // skip groups
+    if (chat.unreadCount === 0) {
+      const phone = jidToPhone(chat.id?._serialized || '');
+      if (!phone) return;
+      db.markAsRead(phone);
+      emit(tenantId, 'chat_read', { phone });
+    }
+  });
+
   client.on('message_create', (msg) => {
     if (!msg.fromMe || msg.to.includes('@g.us')) return;
     const phone = jidToPhone(msg.to);
-    const saved = db.saveMessage(phone, 'out', 'text', msg.body || '', null, false);
+    const saved = db.saveMessage(phone, 'out', 'text', msg.body || '', null, false, true, msg.timestamp);
     emit(tenantId, 'new_message', { phone, ...saved });
   });
 
@@ -132,7 +143,7 @@ function initTenant(tenantId, db) {
       }
     }
 
-    const saved = db.saveMessage(phone, 'in', 'text', body, null, false, matchedSlot === null);
+    const saved = db.saveMessage(phone, 'in', 'text', body, null, false, matchedSlot === null, msg.timestamp);
     emit(tenantId, 'new_message', { phone, name: contactName, ...saved, countUnread: matchedSlot === null });
 
     if (matchedSlot !== null) {

@@ -1922,6 +1922,14 @@ socket.on('new_message', (msg) => {
   }
 });
 
+socket.on('chat_read', ({ phone }) => {
+  const conv = state.conversations.find(c => c.phone === phone);
+  if (conv) {
+    conv.unread = 0;
+    renderConvList();
+  }
+});
+
 // ═══════════════════════════════════════════════════════════════
 //  QR
 // ═══════════════════════════════════════════════════════════════
