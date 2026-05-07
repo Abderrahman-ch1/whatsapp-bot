@@ -84,6 +84,15 @@ function init(io, db) {
     }, 3000);
   });
 
+  // When owner replies from their own phone, update conversation so it leaves Needs Reply
+  client.on('message_create', (msg) => {
+    if (!msg.fromMe) return;
+    if (msg.to.includes('@g.us')) return;
+    const phone = msg.to.replace('@c.us', '');
+    const saved = db.saveMessage(phone, 'out', 'text', msg.body || '', null, false);
+    io.emit('new_message', { phone, ...saved });
+  });
+
   client.on('message', async (msg) => {
     if (msg.from.includes('@g.us')) return;
 

@@ -589,8 +589,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
 #lightbox img { max-width: 90vw; max-height: 90vh; border-radius: var(--r); }
 
 /* ── MOBILE ONLY ELEMENTS ── */
-.mobile-back-btn { display: flex !important; }
-.mobile-settings-btn, .mobile-settings-close { display: none !important; }
+.mobile-back-btn, .mobile-settings-btn, .mobile-settings-close { display: none !important; }
 
 /* ══════════════════════════════════════════════════
    MOBILE  ≤ 767 px
@@ -1022,6 +1021,7 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         <span class="brand-name">Whatsy</span>
         <span class="brand-badge">LIVE</span>
       </div>
+      <div id="sub-pill" style="display:none;align-items:center;gap:6px;font-size:11px;color:var(--t2);padding:4px 0 2px"></div>
       <div class="conn-row">
         <div class="status-dot connected" id="main-status-dot"></div>
         <span id="conn-label">Connected</span>
@@ -1427,6 +1427,14 @@ function showDashboard(info) {
   document.getElementById('app').style.display = 'grid';
   const name = info?.pushname || 'Connected';
   document.getElementById('conn-label').textContent = name;
+
+  const pill = document.getElementById('sub-pill');
+  if (subscription.daysLeft !== null) {
+    const color = subscription.daysLeft <= 5 ? 'var(--red)' : subscription.daysLeft <= 15 ? 'var(--amber)' : 'var(--green)';
+    const plan = subscription.plan === 'pro' ? 'Pro' : 'Basic';
+    pill.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0"></span><span>${plan} — <strong style="color:${color}">${subscription.daysLeft}d</strong> left</span>`;
+    pill.style.display = 'flex';
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
