@@ -305,33 +305,54 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .conv-item.has-unread .conv-name { color: #fff; }
 .conv-item.has-unread .conv-preview { color: var(--t1); }
 
-.conv-actions {
-  display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-  gap: 4px; align-items: center;
-  background: var(--surface); border-radius: 8px; padding: 3px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+/* ── Conv action menu ── */
+.conv-menu-btn {
+  width: 26px; height: 26px; border-radius: 6px; border: none;
+  background: transparent; color: var(--t3); cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .12s, color .12s;
+  position: relative; z-index: 2;
 }
-.conv-item:hover .conv-actions { display: flex; }
-.conv-item:hover .conv-meta { visibility: hidden; }
-.conv-action-btn {
-  width: 28px; height: 28px; border-radius: 6px; border: none;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: background .12s;
-  background: transparent; color: var(--t2);
+.conv-menu-btn:hover { background: var(--hover); color: var(--t1); }
+.conv-item:hover .conv-menu-btn { display: flex; }
+
+.conv-dropdown {
+  position: absolute; right: 4px; top: calc(100% - 4px);
+  background: var(--elevated); border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px; z-index: 100;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  min-width: 148px; display: none; flex-direction: column; gap: 2px;
 }
-.conv-action-btn:hover { background: var(--hover); }
-.conv-action-btn.danger:hover { background: rgba(239,68,68,.15); color: #ef4444; }
-.conv-action-btn.archive-btn:hover { color: var(--amber); }
+.conv-dropdown.open { display: flex; }
+.conv-dd-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 7px; border: none;
+  background: transparent; color: var(--t1); cursor: pointer;
+  font-size: 12.5px; font-family: 'Inter', sans-serif;
+  text-align: left; transition: background .1s;
+  width: 100%;
+}
+.conv-dd-btn:hover { background: var(--hover); }
+.conv-dd-btn.danger { color: #ef4444; }
+.conv-dd-btn.danger:hover { background: rgba(239,68,68,.12); }
+.conv-dd-btn svg { flex-shrink: 0; opacity: .7; }
 
 .archive-toggle {
   display: flex; align-items: center; gap: 8px;
-  padding: 8px 12px; margin-top: 4px;
+  padding: 10px 14px; border-top: 1px solid var(--border);
   font-size: 12px; color: var(--t3); cursor: pointer;
-  border-radius: var(--r); transition: background .12s;
-  user-select: none;
+  transition: background .12s, color .12s;
+  user-select: none; flex-shrink: 0;
 }
 .archive-toggle:hover { background: var(--hover); color: var(--t2); }
-.archive-toggle svg { opacity: .6; }
+.archive-toggle svg { opacity: .6; flex-shrink: 0; }
+
+/* Mobile: always show menu button, bigger tap target */
+@media (max-width: 767px) {
+  .conv-menu-btn { display: flex !important; width: 32px; height: 32px; }
+  .conv-dropdown { right: 0; min-width: 160px; }
+  .archive-toggle { padding: 12px 14px; font-size: 13px; }
+}
 
 .sidebar-empty {
   text-align: center; padding: 48px 24px; color: var(--t3); font-size: 13px;
@@ -691,6 +712,19 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
   /* Toast — full width at bottom */
   .toast-wrap { bottom: 12px; right: 12px; left: 12px; }
   .toast { font-size: 12px; }
+
+  /* Sidebar: make it a proper flex column so archive-toggle stays at bottom */
+  .sidebar { display: flex; flex-direction: column; overflow: hidden; }
+  .sidebar-header { flex-shrink: 0; }
+  .sidebar-list { flex: 1; overflow-y: auto; min-height: 0; }
+  .archive-toggle { flex-shrink: 0; }
+
+  /* Prevent sub-pill from overflowing header on small screens */
+  #sub-pill { font-size: 10px; }
+
+  /* Conv item: ensure menu wrapper doesn't shrink chat area */
+  .conv-info { min-width: 0; flex: 1; }
+  .conv-meta { flex-shrink: 0; }
 }
 
 /* ── SUBSCRIPTION SCREEN ── */
@@ -1912,7 +1946,22 @@ async function loadConversations() {
   renderConvList();
 }
 
+function toggleConvMenu(e, phone) {
+  e.stopPropagation();
+  const dd = document.getElementById('conv-dd-' + phone);
+  const isOpen = dd.classList.contains('open');
+  // Close all open dropdowns
+  document.querySelectorAll('.conv-dropdown.open').forEach(el => el.classList.remove('open'));
+  if (!isOpen) dd.classList.add('open');
+}
+
+// Close any open conv dropdown when clicking elsewhere
+document.addEventListener('click', () => {
+  document.querySelectorAll('.conv-dropdown.open').forEach(el => el.classList.remove('open'));
+});
+
 async function archiveConv(phone) {
+  document.querySelectorAll('.conv-dropdown.open').forEach(el => el.classList.remove('open'));
   await api(`/api/conversations/${phone}/archive`, 'POST');
   if (state.activePhone === phone) {
     state.activePhone = null;
@@ -1930,6 +1979,7 @@ async function unarchiveConv(phone) {
 }
 
 async function deleteConv(phone) {
+  document.querySelectorAll('.conv-dropdown.open').forEach(el => el.classList.remove('open'));
   const name = state.conversations.find(c => c.phone === phone)?.name || phone;
   if (!confirm(`Delete all messages with ${name}? This cannot be undone.`)) return;
   await api(`/api/conversations/${phone}`, 'DELETE');
@@ -2006,17 +2056,22 @@ function renderConvList(filter = '') {
         <span class="conv-time">${relTime(c.last_message_at)}</span>
         ${c.unread > 0 ? `<span class="unread-badge">${c.unread > 99 ? '99+' : c.unread}</span>` : ''}
       </div>
-      <div class="conv-actions" onclick="event.stopPropagation()">
-        ${state.showArchived ? `
-        <button class="conv-action-btn archive-btn" title="Unarchive" onclick="unarchiveConv('${c.phone}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
-        </button>` : `
-        <button class="conv-action-btn archive-btn" title="Archive" onclick="archiveConv('${c.phone}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-        </button>`}
-        <button class="conv-action-btn danger" title="Delete chat" onclick="deleteConv('${c.phone}')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      <div style="position:relative;flex-shrink:0" onclick="event.stopPropagation()">
+        <button class="conv-menu-btn" onclick="toggleConvMenu(event,'${c.phone}')" title="More options">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
         </button>
+        <div class="conv-dropdown" id="conv-dd-${c.phone}">
+          ${state.showArchived ? `
+          <button class="conv-dd-btn" onclick="unarchiveConv('${c.phone}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>Unarchive
+          </button>` : `
+          <button class="conv-dd-btn" onclick="archiveConv('${c.phone}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Archive
+          </button>`}
+          <button class="conv-dd-btn danger" onclick="deleteConv('${c.phone}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>Delete chat
+          </button>
+        </div>
       </div>
     </div>
   `).join('');
