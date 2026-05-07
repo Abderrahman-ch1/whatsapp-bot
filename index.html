@@ -305,6 +305,34 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .conv-item.has-unread .conv-name { color: #fff; }
 .conv-item.has-unread .conv-preview { color: var(--t1); }
 
+.conv-actions {
+  display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  gap: 4px; align-items: center;
+  background: var(--surface); border-radius: 8px; padding: 3px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.conv-item:hover .conv-actions { display: flex; }
+.conv-item:hover .conv-meta { visibility: hidden; }
+.conv-action-btn {
+  width: 28px; height: 28px; border-radius: 6px; border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .12s;
+  background: transparent; color: var(--t2);
+}
+.conv-action-btn:hover { background: var(--hover); }
+.conv-action-btn.danger:hover { background: rgba(239,68,68,.15); color: #ef4444; }
+.conv-action-btn.archive-btn:hover { color: var(--amber); }
+
+.archive-toggle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; margin-top: 4px;
+  font-size: 12px; color: var(--t3); cursor: pointer;
+  border-radius: var(--r); transition: background .12s;
+  user-select: none;
+}
+.archive-toggle:hover { background: var(--hover); color: var(--t2); }
+.archive-toggle svg { opacity: .6; }
+
 .sidebar-empty {
   text-align: center; padding: 48px 24px; color: var(--t3); font-size: 13px;
 }
@@ -1183,6 +1211,10 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         <p data-i18n="noConversations">No conversations yet. Messages from customers will appear here.</p>
       </div>
     </div>
+    <div class="archive-toggle" onclick="toggleArchiveView()" id="archive-toggle">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      <span id="archive-toggle-label">Archived chats</span>
+    </div>
   </aside>
 
   <!-- ── CHAT AREA ── -->
@@ -1709,6 +1741,7 @@ const state = {
   messages: [],
   settingsVisible: true,
   activeTab: 'all',
+  showArchived: false,
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -1874,8 +1907,46 @@ function updateSubPill() {
 //  CONVERSATIONS
 // ═══════════════════════════════════════════════════════════════
 async function loadConversations() {
-  state.conversations = await api('/api/conversations');
+  const url = state.showArchived ? '/api/conversations?archived=1' : '/api/conversations';
+  state.conversations = await api(url);
   renderConvList();
+}
+
+async function archiveConv(phone) {
+  await api(`/api/conversations/${phone}/archive`, 'POST');
+  if (state.activePhone === phone) {
+    state.activePhone = null;
+    document.getElementById('chat-view').style.display = 'none';
+    document.getElementById('chat-empty').style.display = '';
+  }
+  state.conversations = state.conversations.filter(c => c.phone !== phone);
+  renderConvList();
+}
+
+async function unarchiveConv(phone) {
+  await api(`/api/conversations/${phone}/unarchive`, 'POST');
+  state.conversations = state.conversations.filter(c => c.phone !== phone);
+  renderConvList();
+}
+
+async function deleteConv(phone) {
+  const name = state.conversations.find(c => c.phone === phone)?.name || phone;
+  if (!confirm(`Delete all messages with ${name}? This cannot be undone.`)) return;
+  await api(`/api/conversations/${phone}`, 'DELETE');
+  if (state.activePhone === phone) {
+    state.activePhone = null;
+    document.getElementById('chat-view').style.display = 'none';
+    document.getElementById('chat-empty').style.display = '';
+  }
+  state.conversations = state.conversations.filter(c => c.phone !== phone);
+  renderConvList();
+}
+
+async function toggleArchiveView() {
+  state.showArchived = !state.showArchived;
+  document.getElementById('archive-toggle-label').textContent =
+    state.showArchived ? '← Back to chats' : 'Archived chats';
+  await loadConversations();
 }
 
 function updateFollowupBadge() {
@@ -1934,6 +2005,18 @@ function renderConvList(filter = '') {
       <div class="conv-meta">
         <span class="conv-time">${relTime(c.last_message_at)}</span>
         ${c.unread > 0 ? `<span class="unread-badge">${c.unread > 99 ? '99+' : c.unread}</span>` : ''}
+      </div>
+      <div class="conv-actions" onclick="event.stopPropagation()">
+        ${state.showArchived ? `
+        <button class="conv-action-btn archive-btn" title="Unarchive" onclick="unarchiveConv('${c.phone}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        </button>` : `
+        <button class="conv-action-btn archive-btn" title="Archive" onclick="archiveConv('${c.phone}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        </button>`}
+        <button class="conv-action-btn danger" title="Delete chat" onclick="deleteConv('${c.phone}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
       </div>
     </div>
   `).join('');

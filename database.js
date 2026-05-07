@@ -16,6 +16,7 @@ class TenantDB {
     const { db } = this;
     try { db.exec('ALTER TABLE contacts ADD COLUMN unread INTEGER DEFAULT 0'); } catch {}
     try { db.exec('ALTER TABLE contacts ADD COLUMN reminder_sent INTEGER DEFAULT 0'); } catch {}
+    try { db.exec('ALTER TABLE contacts ADD COLUMN archived INTEGER DEFAULT 0'); } catch {}
     db.exec(`
       CREATE TABLE IF NOT EXISTS contacts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,16 +54,26 @@ class TenantDB {
     `).run(phone, name || phone);
   }
 
-  getConversations() {
+  getConversations(archived = 0) {
     return this.db.prepare(`
-      SELECT c.phone, c.name, c.bot_handled, c.unread, c.last_message_at,
+      SELECT c.phone, c.name, c.bot_handled, c.unread, c.last_message_at, c.archived,
         m.content as last_message, m.direction as last_direction, m.type as last_type
       FROM contacts c
       LEFT JOIN messages m ON m.id = (
         SELECT id FROM messages WHERE phone = c.phone ORDER BY created_at DESC LIMIT 1
       )
+      WHERE c.archived = ?
       ORDER BY c.last_message_at DESC
-    `).all();
+    `).all(archived ? 1 : 0);
+  }
+
+  archiveContact(phone, archived = 1) {
+    this.db.prepare('UPDATE contacts SET archived = ? WHERE phone = ?').run(archived ? 1 : 0, phone);
+  }
+
+  deleteConversation(phone) {
+    this.db.prepare('DELETE FROM messages WHERE phone = ?').run(phone);
+    this.db.prepare('DELETE FROM contacts WHERE phone = ?').run(phone);
   }
 
   getMessages(phone) {

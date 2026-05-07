@@ -505,7 +505,25 @@ setInterval(loadStats, 30000);
 app.get('/api/status', requireAuth, (req, res) => res.json(bot.getStatus(req.tenantId)));
 
 // ── Conversations ────────────────────────────────────────────────
-app.get('/api/conversations', requireAuth, (req, res) => res.json(getDB(req).getConversations()));
+app.get('/api/conversations', requireAuth, (req, res) => {
+  const archived = req.query.archived === '1';
+  res.json(getDB(req).getConversations(archived));
+});
+
+app.post('/api/conversations/:phone/archive', requireAuth, (req, res) => {
+  getDB(req).archiveContact(req.params.phone, true);
+  res.json({ ok: true });
+});
+
+app.post('/api/conversations/:phone/unarchive', requireAuth, (req, res) => {
+  getDB(req).archiveContact(req.params.phone, false);
+  res.json({ ok: true });
+});
+
+app.delete('/api/conversations/:phone', requireAuth, (req, res) => {
+  getDB(req).deleteConversation(req.params.phone);
+  res.json({ ok: true });
+});
 
 app.get('/api/conversations/:phone/messages', requireAuth, (req, res) =>
   res.json(getDB(req).getMessages(req.params.phone))
