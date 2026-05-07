@@ -1078,6 +1078,11 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         <span id="login-btn-text" data-i18n="signIn">Sign in</span>
       </button>
     </form>
+    <p style="margin-top:16px;font-size:13px;color:rgba(255,255,255,0.45);text-align:center">
+      <span data-i18n="noAccount">Don't have an account?</span>
+      <a href="#" onclick="showSubscriptionScreen('select');document.getElementById('login-screen').classList.remove('visible');return false;"
+         style="color:rgba(94,184,255,0.8);text-decoration:none;margin-left:4px" data-i18n="requestAccess">Request access</a>
+    </p>
   </div>
 </div>
 
@@ -1432,6 +1437,8 @@ const translations = {
     placeholderUsername: 'Username',
     placeholderPassword: 'Password',
     signIn:            'Sign in',
+    noAccount:         'Don\'t have an account?',
+    requestAccess:     'Request access',
     planLabelBasic:    'Basic — $15/month (1 campaign)',
     planLabelPro:      'Pro — $25/month (up to 5 campaigns)',
     qrStarting:        'Starting WhatsApp...',
@@ -1513,6 +1520,8 @@ const translations = {
     placeholderUsername: 'اسم المستخدم',
     placeholderPassword: 'كلمة المرور',
     signIn:            'دخول',
+    noAccount:         'ليس لديك حساب؟',
+    requestAccess:     'طلب الوصول',
     planLabelBasic:    'أساسي — 15$/شهر (حملة واحدة)',
     planLabelPro:      'احترافي — 25$/شهر (حتى 5 حملات)',
     qrStarting:        '...جاري تشغيل واتساب',
@@ -1594,6 +1603,8 @@ const translations = {
     placeholderUsername: 'Nom d\'utilisateur',
     placeholderPassword: 'Mot de passe',
     signIn:            'Se connecter',
+    noAccount:         'Vous n\'avez pas de compte ?',
+    requestAccess:     'Demander l\'accès',
     planLabelBasic:    'Basique — 15$/mois (1 campagne)',
     planLabelPro:      'Pro — 25$/mois (jusqu\'à 5 campagnes)',
     qrStarting:        'Démarrage de WhatsApp...',
@@ -1689,6 +1700,8 @@ document.addEventListener('DOMContentLoaded', () => setLanguage(currentLang));
 // ═══════════════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════════════
+let currentTenantId = null;
+
 const state = {
   connected: false,
   conversations: [],
@@ -1820,6 +1833,11 @@ async function ensureAuthenticated() {
     document.getElementById('login-screen').classList.add('visible');
     document.getElementById('connect-screen').style.display = 'none';
     return false;
+  }
+  const data = await res.json();
+  if (data.tenantId && data.tenantId !== currentTenantId) {
+    currentTenantId = data.tenantId;
+    socket.emit('join-tenant', currentTenantId);
   }
   document.getElementById('login-screen').classList.remove('visible');
   return true;
@@ -2291,9 +2309,14 @@ async function uploadImages(files, slot = 1) {
 }
 
 function filePathToUrl(p) {
+  if (!p) return '';
   const normalized = p.replace(/\\/g, '/');
-  const match = normalized.match(/(\/uploads\/.+)/);
-  return match ? match[1] : '/' + normalized;
+  // Extract the relative part after 'uploads/' (e.g. 'audio/file.ogg' or 'images/file.jpg')
+  const relMatch = normalized.match(/uploads\/(.+)$/);
+  if (currentTenantId && relMatch) return `/uploads/${currentTenantId}/${relMatch[1]}`;
+  // Legacy fallback
+  const legacyMatch = normalized.match(/(\/uploads\/.+)/);
+  return legacyMatch ? legacyMatch[1] : '/' + normalized;
 }
 
 function renderImageGrid(images, slot = 1) {
@@ -2764,6 +2787,10 @@ async function handleLogin(e) {
     });
     const data = await res.json();
     if (data.ok) {
+      if (data.tenantId) {
+        currentTenantId = data.tenantId;
+        socket.emit('join-tenant', currentTenantId);
+      }
       document.getElementById('login-screen').classList.remove('visible');
       await init();
     } else {
@@ -2867,7 +2894,28 @@ function showSubscriptionGate(sub) {
 //  BOOT
 // ═══════════════════════════════════════════════════════════════
 (async () => {
-  // 1. Load subscription state.
+  // 1. Check authentication first.
+  try {
+    const authRes = await fetch('/api/auth/check');
+    if (authRes.ok) {
+      const authData = await authRes.json();
+      if (authData.tenantId) {
+        currentTenantId = authData.tenantId;
+        socket.emit('join-tenant', currentTenantId);
+      }
+    } else {
+      // Not authenticated — show login screen
+      document.getElementById('login-screen').classList.add('visible');
+      document.getElementById('connect-screen').style.display = 'none';
+      return;
+    }
+  } catch {
+    document.getElementById('login-screen').classList.add('visible');
+    document.getElementById('connect-screen').style.display = 'none';
+    return;
+  }
+
+  // 2. Authenticated — load subscription state.
   try {
     const subRes = await fetch('/api/subscription/status');
     const sub = await subRes.json();
@@ -2890,7 +2938,7 @@ function showSubscriptionGate(sub) {
     return;
   }
 
-  // 2. Subscription active — show QR/connect. init() will handle auth + dashboard.
+  // 3. Subscription active — show QR/connect. init() will handle dashboard.
   await init();
 })();
 

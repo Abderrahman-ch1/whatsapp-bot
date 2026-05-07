@@ -1,170 +1,167 @@
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const fs = require('fs');
 const path = require('path');
+const registry = require('./registry');
 
-let client = null;
-let currentQR = null;
-let isConnected = false;
-let clientInfo = null;
+let _io = null;
 
-const DATA_DIR = process.env.DATA_DIR || '.';
+// Map<tenantId, { client, qr, connected, info }>
+const tenants = new Map();
 
-// Delete stale Chrome user data dirs on startup — LocalAuth restores WA session from its zip backup.
-// LocalAuth names the dir "session" (no clientId) or "session-{clientId}". We wipe ALL session* dirs
-// so the hostname embedded in SingletonLock from a crashed container can never block a fresh start.
-function clearChromiumLocks() {
-  const authDir = path.join(DATA_DIR, '.wwebjs_auth');
+function setIO(io) { _io = io; }
+
+function emit(tenantId, event, data) {
+  if (_io) _io.to('tenant:' + tenantId).emit(event, data);
+}
+
+function getState(tenantId) {
+  if (!tenants.has(tenantId)) tenants.set(tenantId, { client: null, qr: null, connected: false, info: null });
+  return tenants.get(tenantId);
+}
+
+function clearChromiumLocks(tenantId) {
+  const authDir = path.join(registry.getTenantDir(tenantId), '.wwebjs_auth');
   try {
     if (!fs.existsSync(authDir)) return;
-    let cleared = false;
     for (const entry of fs.readdirSync(authDir)) {
       const full = path.join(authDir, entry);
       if (entry.startsWith('session') && fs.statSync(full).isDirectory()) {
         fs.rmSync(full, { recursive: true, force: true });
-        console.log(`🧹 Cleared stale Chrome session dir: ${entry}`);
-        cleared = true;
+        console.log(`🧹 [${tenantId}] Cleared stale Chrome session: ${entry}`);
       }
     }
-    if (!cleared) console.log('🧹 No stale Chrome session dirs found');
   } catch (e) {
-    console.error('Could not clear session dirs:', e.message);
+    console.error(`[${tenantId}] Could not clear session dirs:`, e.message);
   }
 }
 
-function init(io, db) {
-  clearChromiumLocks();
+function initTenant(tenantId, db) {
+  const state = getState(tenantId);
+  if (state.client && state.connected) return;
+
+  if (state.client) {
+    try { state.client.destroy(); } catch {}
+    state.client = null;
+  }
+
+  clearChromiumLocks(tenantId);
+
+  const tenantDir = registry.getTenantDir(tenantId);
+  fs.mkdirSync(tenantDir, { recursive: true });
 
   const puppeteerOpts = {
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--no-first-run',
-      '--no-zygote',
-    ],
+    args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--disable-gpu','--no-first-run','--no-zygote'],
     headless: true,
   };
   if (process.env.CHROMIUM_PATH) puppeteerOpts.executablePath = process.env.CHROMIUM_PATH;
 
-  client = new Client({
-    authStrategy: new LocalAuth({ dataPath: path.join(DATA_DIR, '.wwebjs_auth') }),
+  const client = new Client({
+    authStrategy: new LocalAuth({ dataPath: path.join(tenantDir, '.wwebjs_auth') }),
     puppeteer: puppeteerOpts,
   });
 
+  state.client = client;
+
   client.on('qr', (qr) => {
-    currentQR = qr;
-    isConnected = false;
-    console.log('📱 QR code ready — open http://localhost:3000 to scan');
-    io.emit('qr', qr);
+    state.qr = qr;
+    state.connected = false;
+    console.log(`📱 [${tenantId}] QR code ready`);
+    emit(tenantId, 'qr', qr);
   });
 
   client.on('authenticated', () => {
-    currentQR = null;
-    console.log('🔐 Authenticated');
-    io.emit('authenticated');
+    state.qr = null;
+    console.log(`🔐 [${tenantId}] Authenticated`);
+    emit(tenantId, 'authenticated');
   });
 
   client.on('ready', () => {
-    isConnected = true;
-    currentQR = null;
-    clientInfo = client.info;
-    console.log(`✅ Connected as ${client.info?.pushname || 'Unknown'}`);
-    io.emit('ready', client.info);
+    state.connected = true;
+    state.qr = null;
+    state.info = client.info;
+    console.log(`✅ [${tenantId}] Connected as ${client.info?.pushname || 'Unknown'}`);
+    emit(tenantId, 'ready', client.info);
   });
 
   client.on('disconnected', (reason) => {
-    isConnected = false;
-    clientInfo = null;
-    console.log('❌ Disconnected:', reason);
-    io.emit('disconnected', reason);
-    // Re-initialize after logout so a new QR is generated
-    setTimeout(() => {
-      try { client.initialize(); } catch {}
-    }, 3000);
+    state.connected = false;
+    state.info = null;
+    console.log(`❌ [${tenantId}] Disconnected:`, reason);
+    emit(tenantId, 'disconnected', reason);
+    setTimeout(() => { try { client.initialize(); } catch {} }, 3000);
   });
 
-  // When owner replies from their own phone, update conversation so it leaves Needs Reply
   client.on('message_create', (msg) => {
-    if (!msg.fromMe) return;
-    if (msg.to.includes('@g.us')) return;
+    if (!msg.fromMe || msg.to.includes('@g.us')) return;
     const phone = msg.to.replace('@c.us', '');
     const saved = db.saveMessage(phone, 'out', 'text', msg.body || '', null, false);
-    io.emit('new_message', { phone, ...saved });
+    emit(tenantId, 'new_message', { phone, ...saved });
   });
 
   client.on('message', async (msg) => {
     if (msg.from.includes('@g.us')) return;
-
     const phone = msg.from.replace('@c.us', '');
     const body = msg.body || '';
     const contactName = msg._data?.notifyName || phone;
 
     db.upsertContact(phone, contactName);
 
-    // Detect trigger match before saving so we can skip the unread increment
     const alreadyHandled = db.isContactBotHandled(phone);
     const lc = body.toLowerCase();
     let matchedSlot = null;
     if (!alreadyHandled) {
-      const slots = getCampaignSlots(db);
-      for (const sfx of slots) {
+      for (const sfx of getCampaignSlots(db)) {
         const kw = db.getConfig(`trigger_keyword${sfx}`);
         if (kw && lc.includes(kw.toLowerCase())) { matchedSlot = sfx; break; }
       }
     }
 
-    // Trigger messages are handled by the bot — don't mark as unread
     const saved = db.saveMessage(phone, 'in', 'text', body, null, false, matchedSlot === null);
-    io.emit('new_message', { phone, name: contactName, ...saved, countUnread: matchedSlot === null });
+    emit(tenantId, 'new_message', { phone, name: contactName, ...saved, countUnread: matchedSlot === null });
 
     if (matchedSlot !== null) {
       await sleep(30000);
-      await sendBotResponse(msg.from, phone, db, io, matchedSlot);
+      await sendBotResponse(tenantId, msg.from, phone, db, matchedSlot);
     }
   });
 
-  console.log('🚀 Starting WhatsApp — this may take 30 seconds...');
+  console.log(`🚀 [${tenantId}] Starting WhatsApp...`);
   client.initialize();
+}
+
+async function stopTenant(tenantId) {
+  const state = tenants.get(tenantId);
+  if (!state) return;
+  try { if (state.client) await state.client.destroy(); } catch {}
+  tenants.delete(tenantId);
 }
 
 function getCampaignSlots(db) {
   const plan = db.getConfig('subscription_plan') || '';
   if (plan === 'basic') return [''];
-
   const slots = [''];
   let active = [];
-  try {
-    active = JSON.parse(db.getConfig('active_campaigns') || '[]');
-  } catch {}
-
+  try { active = JSON.parse(db.getConfig('active_campaigns') || '[]'); } catch {}
   if (!active.length) {
     for (let i = 2; i <= 5; i++) {
-      if (
-        db.getConfig(`trigger_keyword_${i}`) ||
-        db.getConfig(`price_text_${i}`) ||
-        db.getConfig(`audio_file_${i}`) ||
-        db.getConfig(`images_${i}`)
-      ) {
-        active.push(i);
-      }
+      if (db.getConfig(`trigger_keyword_${i}`) || db.getConfig(`price_text_${i}`) || db.getConfig(`audio_file_${i}`) || db.getConfig(`images_${i}`)) active.push(i);
     }
   }
-
-  for (const n of active) {
-    const slot = Number(n);
-    if (slot >= 2 && slot <= 5) slots.push(`_${slot}`);
-  }
+  for (const n of active) { const s = Number(n); if (s >= 2 && s <= 5) slots.push(`_${s}`); }
   return [...new Set(slots)];
 }
 
-async function sendBotResponse(chatId, phone, db, io, sfx = '') {
+async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
+  const state = tenants.get(tenantId);
+  if (!state?.client) return;
+  const client = state.client;
+
   try {
     const priceText = db.getConfig(`price_text${sfx}`);
     if (priceText) {
       await client.sendMessage(chatId, priceText);
       const m = db.saveMessage(phone, 'out', 'text', priceText, null, true);
-      io.emit('new_message', { phone, ...m });
+      emit(tenantId, 'new_message', { phone, ...m });
       await sleep(800);
     }
 
@@ -173,71 +170,66 @@ async function sendBotResponse(chatId, phone, db, io, sfx = '') {
       const ext = path.extname(audioPath).toLowerCase();
       const mimeMap = { '.ogg': 'audio/ogg; codecs=opus', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.wav': 'audio/wav', '.webm': 'audio/webm; codecs=opus' };
       const mime = mimeMap[ext] || 'audio/ogg; codecs=opus';
-      const data = fs.readFileSync(audioPath).toString('base64');
-      const media = new MessageMedia(mime, data, `voice${ext}`);
+      const media = new MessageMedia(mime, fs.readFileSync(audioPath).toString('base64'), `voice${ext}`);
       await client.sendMessage(chatId, media, { sendAudioAsVoice: true });
       const m = db.saveMessage(phone, 'out', 'audio', '🎵 Voice message', audioPath, true);
-      io.emit('new_message', { phone, ...m });
+      emit(tenantId, 'new_message', { phone, ...m });
       await sleep(1000);
     }
 
     const imagesJson = db.getConfig(`images${sfx}`);
     if (imagesJson) {
-      const images = JSON.parse(imagesJson);
-      for (const img of images) {
+      for (const img of JSON.parse(imagesJson)) {
         const imgPath = img.path || img;
         if (fs.existsSync(imgPath)) {
-          const media = MessageMedia.fromFilePath(imgPath);
-          await client.sendMessage(chatId, media);
+          await client.sendMessage(chatId, MessageMedia.fromFilePath(imgPath));
           const m = db.saveMessage(phone, 'out', 'image', '🖼 Product image', imgPath, true);
-          io.emit('new_message', { phone, ...m });
+          emit(tenantId, 'new_message', { phone, ...m });
           await sleep(600);
         }
       }
     }
 
     db.markBotHandled(phone);
-    console.log(`🤖 Bot response sent to ${phone} (campaign${sfx || '1'})`);
+    console.log(`🤖 [${tenantId}] Bot response sent to ${phone} (campaign${sfx || '1'})`);
 
-    // Schedule 15-minute follow-up reminder if client doesn't reply
     const REMINDER_DEFAULT = 'مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف';
     setTimeout(async () => {
       try {
         if (!db.shouldSendReminder(phone)) return;
         const reminderText = db.getConfig('reminder_text') || REMINDER_DEFAULT;
         if (!reminderText.trim()) return;
-        await client.sendMessage(chatId, reminderText);
+        const cur = tenants.get(tenantId);
+        if (!cur?.client) return;
+        await cur.client.sendMessage(chatId, reminderText);
         const m = db.saveMessage(phone, 'out', 'text', reminderText, null, true);
-        io.emit('new_message', { phone, ...m });
+        emit(tenantId, 'new_message', { phone, ...m });
         db.markReminderSent(phone);
-        console.log(`⏰ Reminder sent to ${phone}`);
-      } catch (err) {
-        console.error('Reminder error:', err.message);
-      }
+        console.log(`⏰ [${tenantId}] Reminder sent to ${phone}`);
+      } catch (err) { console.error(`[${tenantId}] Reminder error:`, err.message); }
     }, 15 * 60 * 1000);
 
-  } catch (err) {
-    console.error('Bot error:', err.message);
-  }
+  } catch (err) { console.error(`[${tenantId}] Bot error:`, err.message); }
 }
 
-async function sendText(phone, text) {
-  if (!client || !isConnected) throw new Error('WhatsApp not connected');
+async function sendText(tenantId, phone, text) {
+  const state = tenants.get(tenantId);
+  if (!state?.client || !state.connected) throw new Error('WhatsApp not connected');
   const chatId = phone.includes('@c.us') ? phone : `${phone}@c.us`;
   try {
-    const chat = await client.getChatById(chatId);
+    const chat = await state.client.getChatById(chatId);
     await chat.sendMessage(text);
   } catch {
-    await client.sendMessage(chatId, text);
+    await state.client.sendMessage(chatId, text);
   }
 }
 
-function getStatus() {
-  return { connected: isConnected, qr: currentQR, info: clientInfo };
+function getStatus(tenantId) {
+  const state = tenants.get(tenantId);
+  if (!state) return { connected: false, qr: null, info: null };
+  return { connected: state.connected, qr: state.qr, info: state.info };
 }
 
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-module.exports = { init, getStatus, sendText };
+module.exports = { setIO, initTenant, stopTenant, getStatus, sendText };
