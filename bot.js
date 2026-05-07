@@ -232,4 +232,10 @@ function getStatus(tenantId) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-module.exports = { setIO, initTenant, stopTenant, getStatus, sendText };
+function getRunningCount() {
+  let count = 0;
+  for (const [, state] of tenants) if (state.client) count++;
+  return count;
+}
+
+module.exports = { setIO, initTenant, stopTenant, getStatus, sendText, getRunningCount };

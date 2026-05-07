@@ -243,6 +243,15 @@ app.post('/api/subscription/request', async (req, res) => {
 });
 
 // ── Admin routes ─────────────────────────────────────────────────
+app.get('/api/admin/stats', adminAuth, (req, res) => {
+  const RAM_PER_BOT_MB = 300;
+  const PLAN_RAM_MB    = parseInt(process.env.RAILWAY_RAM_MB || '512', 10);
+  const running        = bot.getRunningCount();
+  const usedMB         = running * RAM_PER_BOT_MB;
+  const pct            = Math.min(100, Math.round((usedMB / PLAN_RAM_MB) * 100));
+  res.json({ running, usedMB, totalMB: PLAN_RAM_MB, pct });
+});
+
 app.get('/api/admin/tenants', adminAuth, (req, res) => {
   res.json(registry.getAllTenants());
 });
@@ -289,6 +298,13 @@ body{font-family:system-ui,sans-serif;background:#0f1117;color:#e2e8f0;min-heigh
 h1{font-size:22px;font-weight:700;color:#fff;margin-bottom:24px}
 h2{font-size:15px;font-weight:700;color:#94a3b8;margin-bottom:14px;letter-spacing:.05em;text-transform:uppercase}
 .card{background:#1a1d27;border:1px solid #2d3148;border-radius:14px;padding:24px;margin-bottom:24px}
+.ram-bar-wrap{background:#0f1117;border-radius:99px;height:10px;overflow:hidden;margin:10px 0 6px}
+.ram-bar{height:100%;border-radius:99px;transition:width .5s}
+.ram-ok{background:linear-gradient(90deg,#4facfe,#00f2fe)}
+.ram-warn{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.ram-danger{background:linear-gradient(90deg,#ef4444,#f87171)}
+.ram-label{font-size:12px;color:#64748b}
+.ram-alert{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13px;background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.25);display:none}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;padding:8px 12px;color:#64748b;font-weight:600;border-bottom:1px solid #2d3148}
 td{padding:10px 12px;border-bottom:1px solid #1e2235;vertical-align:middle}
@@ -321,6 +337,14 @@ hr{border:none;border-top:1px solid #2d3148;margin:20px 0}
 </style>
 </head><body>
 <h1>⚙️ Whatsy Admin</h1>
+
+<!-- RAM usage widget -->
+<div class="card" id="ram-card">
+  <h2>Server Capacity</h2>
+  <div class="ram-bar-wrap"><div class="ram-bar ram-ok" id="ram-bar" style="width:0%"></div></div>
+  <div class="ram-label" id="ram-label">Loading...</div>
+  <div class="ram-alert" id="ram-alert">⚠️ You are using over 80% of estimated RAM. Upgrade your Railway plan before adding more clients to avoid crashes.</div>
+</div>
 
 <!-- Tenants table -->
 <div class="card">
@@ -441,8 +465,25 @@ function showMsg(text, ok) {
   el.style.display = 'block';
 }
 
+async function loadStats() {
+  try {
+    const r = await fetch('/api/admin/stats?secret=' + qp);
+    const s = await r.json();
+    const bar   = document.getElementById('ram-bar');
+    const label = document.getElementById('ram-label');
+    const alert = document.getElementById('ram-alert');
+    const cls   = s.pct >= 80 ? 'ram-danger' : s.pct >= 55 ? 'ram-warn' : 'ram-ok';
+    bar.style.width = s.pct + '%';
+    bar.className   = 'ram-bar ' + cls;
+    label.textContent = s.running + ' bot' + (s.running !== 1 ? 's' : '') + ' running — ~' + s.usedMB + ' MB / ' + s.totalMB + ' MB estimated (' + s.pct + '%)';
+    alert.style.display = s.pct >= 80 ? 'block' : 'none';
+  } catch {}
+}
+
 loadTenants();
 loadRequests();
+loadStats();
+setInterval(loadStats, 30000);
 </script>
 </body></html>`);
 });
