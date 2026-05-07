@@ -286,6 +286,11 @@ app.get('/api/admin/requests', adminAuth, (req, res) => {
   res.json(registry.getAccessRequests());
 });
 
+app.delete('/api/admin/requests/:id', adminAuth, (req, res) => {
+  registry.deleteAccessRequest(parseInt(req.params.id, 10));
+  res.json({ ok: true });
+});
+
 // ── Admin panel HTML ─────────────────────────────────────────────
 app.get('/admin', adminAuth, (req, res) => {
   const secret = ADMIN_SECRET;
@@ -413,12 +418,20 @@ async function loadRequests() {
   const wrap = document.getElementById('requests-wrap');
   if (!reqs.length) { wrap.innerHTML = '<p style="color:#64748b;font-size:13px">No pending requests.</p>'; return; }
   wrap.innerHTML = reqs.map(r =>
-    '<div class="req-item" onclick="prefill(\\''+r.name+'\\',\\''+r.phone+'\\',\\''+r.plan+'\\')">' +
+    '<div class="req-item" style="display:flex;align-items:center;justify-content:space-between">' +
+    '<div onclick="prefill(\\''+r.name+'\\',\\''+r.phone+'\\',\\''+r.plan+'\\')" style="flex:1;cursor:pointer">' +
     '<strong>' + r.name + '</strong> — ' + r.phone +
     '<span>' + r.plan + '</span>' +
     '<span>' + new Date(r.created_at).toLocaleString() + '</span>' +
+    '</div>' +
+    '<button class="btn-revoke" style="margin-left:12px;flex-shrink:0" onclick="deleteRequest('+r.id+')">✕ Delete</button>' +
     '</div>'
   ).join('');
+}
+
+async function deleteRequest(id) {
+  await fetch('/api/admin/requests/' + id + '?secret=' + qp, { method: 'DELETE' });
+  loadRequests();
 }
 
 function prefill(name, phone, plan) {

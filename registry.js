@@ -133,10 +133,14 @@ function getAccessRequests() {
   return reg.prepare('SELECT * FROM access_requests ORDER BY created_at DESC').all();
 }
 
+function deleteAccessRequest(id) {
+  reg.prepare('DELETE FROM access_requests WHERE id = ?').run(id);
+}
+
 module.exports = {
   getTenantDir, hashPassword, verifyPassword,
   getSubscriptionStatus, verifyLogin,
   upsertTenant, updateCredentials, revokeTenant,
   getAllTenants, getTenant,
-  createAccessRequest, getAccessRequests,
+  createAccessRequest, getAccessRequests, deleteAccessRequest,
 };
