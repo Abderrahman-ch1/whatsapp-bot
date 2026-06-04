@@ -147,7 +147,7 @@ function initTenant(tenantId, db) {
     emit(tenantId, 'new_message', { phone, name: contactName, ...saved, countUnread: matchedSlot === null });
 
     if (matchedSlot !== null) {
-      await sleep(30000);
+      await sleep(getSmartDelay());
       await sendBotResponse(tenantId, phoneToChatId(phone), phone, db, matchedSlot);
     }
   });
@@ -178,6 +178,18 @@ function getCampaignSlots(db) {
   return [...new Set(slots)];
 }
 
+function getSmartDelay() {
+  const hour = new Date().getHours();
+  const isNight = hour >= 23 || hour < 8;
+  const min = isNight ? 45000 : 20000;
+  const max = isNight ? 120000 : 45000;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function humanDelay(min, max) {
+  return sleep(Math.floor(Math.random() * (max - min + 1)) + min);
+}
+
 async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
   const state = tenants.get(tenantId);
   if (!state?.client) return;
@@ -186,14 +198,16 @@ async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
   try {
     const priceText = db.getConfig(`price_text${sfx}`);
     if (priceText) {
+      try { const ch = await client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
       await client.sendMessage(chatId, priceText);
       const m = db.saveMessage(phone, 'out', 'text', priceText, null, true);
       emit(tenantId, 'new_message', { phone, ...m });
-      await sleep(800);
+      await humanDelay(3000, 6000);
     }
 
     const audioPath = db.getConfig(`audio_file${sfx}`);
     if (audioPath && fs.existsSync(audioPath)) {
+      await humanDelay(2000, 4000);
       const ext = path.extname(audioPath).toLowerCase();
       const mimeMap = { '.ogg': 'audio/ogg; codecs=opus', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.wav': 'audio/wav', '.webm': 'audio/webm; codecs=opus' };
       const mime = mimeMap[ext] || 'audio/ogg; codecs=opus';
@@ -201,7 +215,7 @@ async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
       await client.sendMessage(chatId, media, { sendAudioAsVoice: true });
       const m = db.saveMessage(phone, 'out', 'audio', '🎵 Voice message', audioPath, true);
       emit(tenantId, 'new_message', { phone, ...m });
-      await sleep(1000);
+      await humanDelay(4000, 8000);
     }
 
     const imagesJson = db.getConfig(`images${sfx}`);
@@ -212,7 +226,7 @@ async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
           await client.sendMessage(chatId, MessageMedia.fromFilePath(imgPath));
           const m = db.saveMessage(phone, 'out', 'image', '🖼 Product image', imgPath, true);
           emit(tenantId, 'new_message', { phone, ...m });
-          await sleep(600);
+          await humanDelay(2000, 5000);
         }
       }
     }
@@ -228,6 +242,7 @@ async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
         if (!reminderText.trim()) return;
         const cur = tenants.get(tenantId);
         if (!cur?.client) return;
+        try { const ch = await cur.client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
         await cur.client.sendMessage(chatId, reminderText);
         const m = db.saveMessage(phone, 'out', 'text', reminderText, null, true);
         emit(tenantId, 'new_message', { phone, ...m });
