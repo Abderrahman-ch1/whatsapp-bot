@@ -245,7 +245,7 @@ app.post('/api/subscription/request', async (req, res) => {
 // ── Admin routes ─────────────────────────────────────────────────
 app.get('/api/admin/stats', adminAuth, (req, res) => {
   const RAM_PER_BOT_MB = 300;
-  const PLAN_RAM_MB    = parseInt(process.env.RAILWAY_RAM_MB || '512', 10);
+  const PLAN_RAM_MB    = parseInt(process.env.SERVER_RAM_MB || '4096', 10);
   const running        = bot.getRunningCount();
   const usedMB         = running * RAM_PER_BOT_MB;
   const pct            = Math.min(100, Math.round((usedMB / PLAN_RAM_MB) * 100));
@@ -348,7 +348,7 @@ hr{border:none;border-top:1px solid #2d3148;margin:20px 0}
   <h2>Server Capacity</h2>
   <div class="ram-bar-wrap"><div class="ram-bar ram-ok" id="ram-bar" style="width:0%"></div></div>
   <div class="ram-label" id="ram-label">Loading...</div>
-  <div class="ram-alert" id="ram-alert">⚠️ You are using over 80% of estimated RAM. Upgrade your Railway plan before adding more clients to avoid crashes.</div>
+  <div class="ram-alert" id="ram-alert">⚠️ You are using over 80% of estimated RAM. Consider upgrading your Hetzner server before adding more clients to avoid crashes.</div>
 </div>
 
 <!-- Tenants table -->
