@@ -24,6 +24,8 @@ class TenantDB {
         name TEXT,
         bot_handled INTEGER DEFAULT 0,
         unread INTEGER DEFAULT 0,
+        archived INTEGER DEFAULT 0,
+        reminder_sent INTEGER DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         last_message_at TEXT DEFAULT (datetime('now'))
       );
