@@ -37,17 +37,23 @@ function getState(tenantId) {
 
 function clearChromiumLocks(tenantId) {
   const authDir = path.join(registry.getTenantDir(tenantId), '.wwebjs_auth');
+  const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket', '.lock'];
   try {
     if (!fs.existsSync(authDir)) return;
     for (const entry of fs.readdirSync(authDir)) {
-      const full = path.join(authDir, entry);
-      if (entry.startsWith('session') && fs.statSync(full).isDirectory()) {
-        fs.rmSync(full, { recursive: true, force: true });
-        console.log(`🧹 [${tenantId}] Cleared stale Chrome session: ${entry}`);
+      const sessionDir = path.join(authDir, entry);
+      if (entry.startsWith('session') && fs.statSync(sessionDir).isDirectory()) {
+        for (const lockFile of lockFiles) {
+          const lockPath = path.join(sessionDir, lockFile);
+          if (fs.existsSync(lockPath)) {
+            fs.rmSync(lockPath, { force: true });
+            console.log(`🧹 [${tenantId}] Removed lock file: ${lockFile}`);
+          }
+        }
       }
     }
   } catch (e) {
-    console.error(`[${tenantId}] Could not clear session dirs:`, e.message);
+    console.error(`[${tenantId}] Could not clear lock files:`, e.message);
   }
 }
 
