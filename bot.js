@@ -237,6 +237,29 @@ async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
       }
     }
 
+    const compImagesJson = db.getConfig(`comparison_images${sfx}`);
+    if (compImagesJson) {
+      for (const img of JSON.parse(compImagesJson)) {
+        const imgPath = img.path || img;
+        if (fs.existsSync(imgPath)) {
+          await humanDelay(2000, 4000);
+          await client.sendMessage(chatId, MessageMedia.fromFilePath(imgPath));
+          const m = db.saveMessage(phone, 'out', 'image', '🖼 Comparison image', imgPath, true);
+          emit(tenantId, 'new_message', { phone, ...m });
+        }
+      }
+    }
+
+    const compText = db.getConfig(`comparison_text${sfx}`);
+    if (compText) {
+      await humanDelay(2000, 4000);
+      try { const ch = await client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
+      await client.sendMessage(chatId, compText);
+      const m = db.saveMessage(phone, 'out', 'text', compText, null, true);
+      emit(tenantId, 'new_message', { phone, ...m });
+      await humanDelay(2000, 4000);
+    }
+
     db.markBotHandled(phone);
     console.log(`🤖 [${tenantId}] Bot response sent to ${phone} (campaign${sfx || '1'})`);
 

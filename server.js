@@ -154,6 +154,18 @@ const uploadImages = multer({
   }),
 });
 
+const uploadComparison = multer({
+  limits: { fileSize: 10 * 1024 * 1024, files: 20 },
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = path.join(DATA_DIR, 'tenants', req.tenantId, 'uploads', 'comparison');
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => cb(null, `${Date.now()}_${file.originalname}`),
+  }),
+});
+
 // ── Login rate limiting (5 attempts per 15 min per IP) ───────────
 const loginAttempts = new Map();
 function checkLoginRate(ip) {
@@ -553,8 +565,8 @@ app.post('/api/send', requireAuth, async (req, res) => {
 app.get('/api/config', requireAuth, (req, res) => res.json(getDB(req).getAllConfig()));
 
 app.post('/api/config', requireAuth, (req, res) => {
-  const allowed = ['trigger_keyword','price_text','reminder_text','active_campaigns'];
-  for (let i = 2; i <= 5; i++) allowed.push(`trigger_keyword_${i}`, `price_text_${i}`);
+  const allowed = ['trigger_keyword','price_text','reminder_text','active_campaigns','comparison_text'];
+  for (let i = 2; i <= 5; i++) allowed.push(`trigger_keyword_${i}`, `price_text_${i}`, `comparison_text_${i}`);
   for (const key of allowed) {
     if (req.body[key] !== undefined) getDB(req).setConfig(key, req.body[key]);
   }
@@ -578,6 +590,13 @@ app.delete('/api/campaigns/:slot', requireAuth, (req, res) => {
   db.setConfig(`audio_file${sfx}`, '');
   db.setConfig(`audio_name${sfx}`, '');
   db.setConfig(`images${sfx}`, '');
+  try {
+    for (const img of JSON.parse(db.getConfig(`comparison_images${sfx}`) || '[]')) {
+      const p = img.path || img; if (p && fs.existsSync(p)) fs.unlinkSync(p);
+    }
+  } catch {}
+  db.setConfig(`comparison_images${sfx}`, '');
+  db.setConfig(`comparison_text${sfx}`, '');
   let active = [];
   try { active = JSON.parse(db.getConfig('active_campaigns') || '[]'); } catch {}
   db.setConfig('active_campaigns', JSON.stringify(active.filter(n => Number(n) !== slot)));
@@ -628,6 +647,27 @@ app.delete('/api/upload/images/:filename', requireAuth, (req, res) => {
   const target   = existing.find(f => f.path.includes(req.params.filename));
   if (target && fs.existsSync(target.path)) fs.unlinkSync(target.path);
   getDB(req).setConfig(`images${sfx}`, JSON.stringify(existing.filter(f => !f.path.includes(req.params.filename))));
+  res.json({ success: true });
+});
+
+// ── Comparison image upload ───────────────────────────────────────
+app.post('/api/upload/comparison-images', requireAuth, uploadComparison.array('images', 20), (req, res) => {
+  const slot = parseInt(req.query.slot) || 1;
+  const sfx  = slot > 1 ? `_${slot}` : '';
+  if (!req.files?.length) return res.status(400).json({ error: 'No files uploaded' });
+  const existing = JSON.parse(getDB(req).getConfig(`comparison_images${sfx}`) || '[]');
+  const newFiles = req.files.map(f => ({ path: f.path, name: f.originalname }));
+  getDB(req).setConfig(`comparison_images${sfx}`, JSON.stringify([...existing, ...newFiles]));
+  res.json({ success: true, files: newFiles });
+});
+
+app.delete('/api/upload/comparison-images/:filename', requireAuth, (req, res) => {
+  const slot     = parseInt(req.query.slot) || 1;
+  const sfx      = slot > 1 ? `_${slot}` : '';
+  const existing = JSON.parse(getDB(req).getConfig(`comparison_images${sfx}`) || '[]');
+  const target   = existing.find(f => f.path.includes(req.params.filename));
+  if (target && fs.existsSync(target.path)) fs.unlinkSync(target.path);
+  getDB(req).setConfig(`comparison_images${sfx}`, JSON.stringify(existing.filter(f => !f.path.includes(req.params.filename))));
   res.json({ success: true });
 });
 

@@ -1420,6 +1420,31 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         </div>
       </div>
 
+      <!-- ── COMPARISON ── -->
+      <div class="s-card">
+        <div class="s-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="9" height="18" rx="1"/><rect x="13" y="3" width="9" height="18" rx="1"/>
+          </svg>
+          <span>Comparison</span>
+        </div>
+        <p class="hint">Images and a message sent after product images — shows how your product compares to competitors.</p>
+        <div class="images-grid" id="comparison-grid"></div>
+        <div class="upload-zone" id="comparison-zone">
+          <input type="file" id="comparison-input" accept="image/*" multiple>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span>Click to upload comparison images or drag & drop</span><br>
+          <span style="font-size:11px;color:var(--t3)">JPG, PNG, WEBP supported</span>
+        </div>
+        <div style="margin-top:14px">
+          <label class="field-label">Comparison message</label>
+          <textarea class="field-input" id="s-comparison" rows="4" placeholder="e.g. As you can see, our product is better quality at half the price 👆"></textarea>
+        </div>
+        <button class="btn-primary" id="save-comparison-btn">Save Comparison</button>
+      </div>
+
       <!-- ── DYNAMIC CAMPAIGNS ── -->
       <div id="campaigns-container"></div>
 
@@ -2353,6 +2378,8 @@ async function loadConfig() {
   if (cfg.price_text)      document.getElementById('s-price').value   = cfg.price_text;
   if (cfg.audio_file && cfg.audio_name) showAudioPreview(cfg.audio_name, cfg.audio_file, 1);
   if (cfg.images)   { try { renderImageGrid(JSON.parse(cfg.images),   1); } catch {} }
+  if (cfg.comparison_images) { try { renderComparisonGrid(JSON.parse(cfg.comparison_images)); } catch {} }
+  if (cfg.comparison_text) document.getElementById('s-comparison').value = cfg.comparison_text;
 
   // Restore dynamic campaigns
   let stored = [];
@@ -2571,6 +2598,64 @@ async function deleteImage(filename, slot = 1) {
   renderImageGrid(currentImages[slot], slot);
   toast('Image removed', 'success');
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  COMPARISON IMAGES UPLOAD
+// ═══════════════════════════════════════════════════════════════
+let currentComparisonImages = [];
+
+const compZone  = document.getElementById('comparison-zone');
+const compInput = document.getElementById('comparison-input');
+
+compZone.addEventListener('click', () => compInput.click());
+compZone.addEventListener('dragover', (e) => { e.preventDefault(); compZone.classList.add('drag'); });
+compZone.addEventListener('dragleave', () => compZone.classList.remove('drag'));
+compZone.addEventListener('drop', (e) => {
+  e.preventDefault(); compZone.classList.remove('drag');
+  if (e.dataTransfer.files.length) uploadComparisonImages(e.dataTransfer.files);
+});
+compInput.addEventListener('change', () => {
+  if (compInput.files.length) uploadComparisonImages(compInput.files);
+});
+
+async function uploadComparisonImages(files) {
+  const fd = new FormData();
+  for (const f of files) fd.append('images', f);
+  const res = await fetch('/api/upload/comparison-images', { method: 'POST', body: fd });
+  const data = await res.json();
+  if (data.success) {
+    currentComparisonImages = [...currentComparisonImages, ...data.files];
+    renderComparisonGrid(currentComparisonImages);
+    toast(`${data.files.length} image${data.files.length > 1 ? 's' : ''} uploaded!`, 'success');
+  }
+}
+
+function renderComparisonGrid(images) {
+  currentComparisonImages = images;
+  const grid = document.getElementById('comparison-grid');
+  grid.innerHTML = images.map((img, i) => {
+    const p = img.path || img;
+    const url = filePathToUrl(p);
+    const fname = p.split(/[/\\]/).pop();
+    return `<div class="img-thumb">
+      <img src="${url}" alt="Comparison ${i+1}">
+      <button class="img-thumb-del" onclick="deleteComparisonImage('${escAttr(fname)}')" title="Remove">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function deleteComparisonImage(filename) {
+  await api(`/api/upload/comparison-images/${filename}`, 'DELETE');
+  currentComparisonImages = currentComparisonImages.filter(img => !(img.path || img).includes(filename));
+  renderComparisonGrid(currentComparisonImages);
+  toast('Image removed', 'success');
+}
+
+document.getElementById('save-comparison-btn').addEventListener('click', async () => {
+  const comparison_text = document.getElementById('s-comparison').value.trim();
+  await api('/api/config', 'POST', { comparison_text });
+  toast('Comparison saved!', 'success');
+});
 
 // ═══════════════════════════════════════════════════════════════
 //  SETTINGS TOGGLE
