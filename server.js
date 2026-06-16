@@ -86,8 +86,8 @@ function getDB(req) { return getTenantDB(req.tenantId); }
 function convertToOpusOgg(inputPath) {
   const outputPath = inputPath.replace(/\.[^.]+$/, '') + '_wa.ogg';
   const result = spawnSync(FFMPEG_PATH, [
-    '-i', inputPath, '-c:a', 'libopus', '-b:a', '32k',
-    '-ar', '16000', '-ac', '1', '-vn', '-f', 'ogg', outputPath, '-y'
+    '-i', inputPath, '-c:a', 'libopus', '-b:a', '64k',
+    '-ar', '48000', '-ac', '1', '-vn', '-f', 'ogg', outputPath, '-y'
   ], { timeout: 30000 });
   if (result.status === 0) return outputPath;
   console.error('Audio conversion failed:', result.stderr?.toString().slice(-300));
