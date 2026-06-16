@@ -608,15 +608,9 @@ app.post('/api/upload/audio', requireAuth, uploadAudio.single('audio'), (req, re
   const slot = parseInt(req.query.slot) || 1;
   const sfx  = slot > 1 ? `_${slot}` : '';
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const converted = convertToOpusOgg(req.file.path);
-  if (converted && fs.existsSync(converted)) {
-    fs.unlinkSync(req.file.path);
-    getDB(req).setConfig(`audio_file${sfx}`, converted);
-  } else {
-    getDB(req).setConfig(`audio_file${sfx}`, req.file.path);
-  }
+  getDB(req).setConfig(`audio_file${sfx}`, req.file.path);
   getDB(req).setConfig(`audio_name${sfx}`, req.file.originalname);
-  res.json({ success: true, path: converted || req.file.path, name: req.file.originalname });
+  res.json({ success: true, path: req.file.path, name: req.file.originalname });
 });
 
 app.delete('/api/upload/audio', requireAuth, (req, res) => {

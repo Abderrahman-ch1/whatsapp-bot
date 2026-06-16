@@ -214,10 +214,7 @@ async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
     const audioPath = db.getConfig(`audio_file${sfx}`);
     if (audioPath && fs.existsSync(audioPath)) {
       await humanDelay(2000, 4000);
-      const ext = path.extname(audioPath).toLowerCase();
-      const mimeMap = { '.ogg': 'audio/ogg; codecs=opus', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.wav': 'audio/wav', '.webm': 'audio/webm; codecs=opus' };
-      const mime = mimeMap[ext] || 'audio/ogg; codecs=opus';
-      const media = new MessageMedia(mime, fs.readFileSync(audioPath).toString('base64'), `voice${ext}`);
+      const media = MessageMedia.fromFilePath(audioPath);
       await client.sendMessage(chatId, media, { sendAudioAsVoice: true });
       const m = db.saveMessage(phone, 'out', 'audio', '🎵 Voice message', audioPath, true);
       emit(tenantId, 'new_message', { phone, ...m });
