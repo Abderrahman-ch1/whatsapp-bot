@@ -265,7 +265,11 @@ app.get('/api/admin/stats', adminAuth, (req, res) => {
 });
 
 app.get('/api/admin/tenants', adminAuth, (req, res) => {
-  res.json(registry.getAllTenants());
+  const tenants = registry.getAllTenants().map(t => {
+    const status = bot.getStatus(t.id);
+    return { ...t, whatsappName: status.connected ? (status.info?.pushname || null) : null };
+  });
+  res.json(tenants);
 });
 
 app.post('/api/admin/tenants', adminAuth, (req, res) => {
@@ -407,14 +411,16 @@ async function loadTenants() {
   const tenants = await r.json();
   const wrap = document.getElementById('tenants-wrap');
   if (!tenants.length) { wrap.innerHTML = '<p style="color:#64748b;font-size:13px">No tenants yet.</p>'; return; }
-  wrap.innerHTML = '<table><thead><tr><th>ID</th><th>Username</th><th>Plan</th><th>Expires</th><th>Days Left</th><th>Status</th><th></th></tr></thead><tbody>' +
+  wrap.innerHTML = '<table><thead><tr><th>ID</th><th>Username</th><th>WhatsApp</th><th>Plan</th><th>Expires</th><th>Days Left</th><th>Status</th><th></th></tr></thead><tbody>' +
     tenants.map(t => {
       const dColor = t.daysLeft === null ? '' : t.daysLeft <= 5 ? 'days-danger' : t.daysLeft <= 15 ? 'days-warn' : 'days-ok';
       const dText  = t.daysLeft === null ? '—' : t.daysLeft <= 0 ? 'EXPIRED' : t.daysLeft + ' days';
       const exp    = t.expires ? new Date(t.expires).toDateString() : '—';
+      const wa     = t.whatsappName ? '<span style="color:#34d399">' + t.whatsappName + '</span>' : '<span style="color:#64748b">— not connected —</span>';
       return '<tr>' +
         '<td><strong style="color:#fff">' + t.id + '</strong></td>' +
         '<td>' + t.username + '</td>' +
+        '<td style="font-size:12px">' + wa + '</td>' +
         '<td>' + t.plan + '</td>' +
         '<td style="font-size:12px;color:#64748b">' + exp + '</td>' +
         '<td><span class="' + dColor + '">' + dText + '</span></td>' +
@@ -509,6 +515,7 @@ loadTenants();
 loadRequests();
 loadStats();
 setInterval(loadStats, 30000);
+setInterval(loadTenants, 15000);
 </script>
 </body></html>`);
 });
