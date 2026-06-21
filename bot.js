@@ -35,6 +35,30 @@ function getState(tenantId) {
   return tenants.get(tenantId);
 }
 
+// Puppeteer/Chromium crash signatures — page died but no 'disconnected' event fired
+const CRASH_PATTERNS = ['detached Frame', 'Execution context was destroyed', 'Protocol error', 'Session closed', 'Target closed'];
+function isCrashError(err) {
+  const msg = err?.message || String(err || '');
+  return CRASH_PATTERNS.some(p => msg.includes(p));
+}
+
+function recoverTenant(tenantId, db) {
+  const state = tenants.get(tenantId);
+  if (!state || state.recovering) return;
+  state.recovering = true;
+  state.connected = false;
+  console.log(`🩹 [${tenantId}] Crash detected, recovering session...`);
+  emit(tenantId, 'disconnected', 'crashed');
+  (async () => {
+    try { if (state.client) await state.client.destroy(); } catch {}
+    state.client = null;
+    setTimeout(() => {
+      state.recovering = false;
+      try { initTenant(tenantId, db); } catch (e) { console.error(`[${tenantId}] Recovery failed:`, e.message); }
+    }, 3000);
+  })();
+}
+
 function clearChromiumLocks(tenantId) {
   const authDir = path.join(registry.getTenantDir(tenantId), '.wwebjs_auth');
   const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket', '.lock'];
@@ -103,6 +127,20 @@ function initTenant(tenantId, db) {
     state.info = client.info;
     console.log(`✅ [${tenantId}] Connected as ${client.info?.pushname || 'Unknown'}`);
     emit(tenantId, 'ready', client.info);
+
+    try {
+      client.pupBrowser?.on('disconnected', () => recoverTenant(tenantId, db));
+      client.pupPage?.on('close', () => recoverTenant(tenantId, db));
+      client.pupPage?.on('error', () => recoverTenant(tenantId, db));
+    } catch {}
+
+    // Heartbeat: catches "Execution context destroyed" crashes that don't fire close/error
+    const heartbeat = setInterval(async () => {
+      const cur = tenants.get(tenantId);
+      if (!cur?.client || cur.client !== client) { clearInterval(heartbeat); return; }
+      try { await client.getState(); }
+      catch (err) { clearInterval(heartbeat); if (isCrashError(err)) recoverTenant(tenantId, db); }
+    }, 60000);
   });
 
   client.on('disconnected', (reason) => {
@@ -274,10 +312,16 @@ async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
         emit(tenantId, 'new_message', { phone, ...m });
         db.markReminderSent(phone);
         console.log(`⏰ [${tenantId}] Reminder sent to ${phone}`);
-      } catch (err) { console.error(`[${tenantId}] Reminder error:`, err.message); }
+      } catch (err) {
+        console.error(`[${tenantId}] Reminder error:`, err.message);
+        if (isCrashError(err)) recoverTenant(tenantId, db);
+      }
     }, 15 * 60 * 1000);
 
-  } catch (err) { console.error(`[${tenantId}] Bot error:`, err.message); }
+  } catch (err) {
+    console.error(`[${tenantId}] Bot error:`, err.message);
+    if (isCrashError(err)) recoverTenant(tenantId, db);
+  }
 }
 
 async function sendText(tenantId, phone, text) {
