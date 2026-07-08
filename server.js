@@ -572,7 +572,7 @@ app.post('/api/send', requireAuth, async (req, res) => {
 app.get('/api/config', requireAuth, (req, res) => res.json(getDB(req).getAllConfig()));
 
 app.post('/api/config', requireAuth, (req, res) => {
-  const allowed = ['trigger_keyword','price_text','reminder_text','active_campaigns','comparison_text'];
+  const allowed = ['trigger_keyword','price_text','reminder_text','active_campaigns','comparison_text','returning_text','returning_audio_file','returning_audio_name','repeat_text'];
   for (let i = 2; i <= 5; i++) allowed.push(`trigger_keyword_${i}`, `price_text_${i}`, `comparison_text_${i}`);
   for (const key of allowed) {
     if (req.body[key] !== undefined) getDB(req).setConfig(key, req.body[key]);
@@ -648,6 +648,36 @@ app.delete('/api/upload/images/:filename', requireAuth, (req, res) => {
   const target   = existing.find(f => f.path.includes(req.params.filename));
   if (target && fs.existsSync(target.path)) fs.unlinkSync(target.path);
   getDB(req).setConfig(`images${sfx}`, JSON.stringify(existing.filter(f => !f.path.includes(req.params.filename))));
+  res.json({ success: true });
+});
+
+// ── Returning customer audio upload ──────────────────────────────
+const uploadReturningAudio = multer({
+  limits: { fileSize: 20 * 1024 * 1024 },
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = path.join(DATA_DIR, 'tenants', req.tenantId, 'uploads', 'returning-audio');
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => cb(null, `${Date.now()}_${file.originalname}`),
+  }),
+});
+
+app.post('/api/upload/returning-audio', requireAuth, uploadReturningAudio.single('audio'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const old = getDB(req).getConfig('returning_audio_file');
+  if (old && fs.existsSync(old)) fs.unlinkSync(old);
+  getDB(req).setConfig('returning_audio_file', req.file.path);
+  getDB(req).setConfig('returning_audio_name', req.file.originalname);
+  res.json({ success: true, path: req.file.path, name: req.file.originalname });
+});
+
+app.delete('/api/upload/returning-audio', requireAuth, (req, res) => {
+  const p = getDB(req).getConfig('returning_audio_file');
+  if (p && fs.existsSync(p)) fs.unlinkSync(p);
+  getDB(req).setConfig('returning_audio_file', '');
+  getDB(req).setConfig('returning_audio_name', '');
   res.json({ success: true });
 });
 

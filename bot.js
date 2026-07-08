@@ -1,9 +1,25 @@
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 const registry = require('./registry');
 
 let _io = null;
+
+function sendTelegram(text) {
+  const token  = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_OWNER_CHAT_ID;
+  if (!token || !chatId) return;
+  const body = JSON.stringify({ chat_id: chatId, text });
+  const req = https.request({
+    hostname: 'api.telegram.org',
+    path: `/bot${token}/sendMessage`,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) }
+  }, (r) => r.resume());
+  req.on('error', (e) => console.error('Telegram error:', e.message));
+  req.write(body); req.end();
+}
 
 // Map<tenantId, { client, qr, connected, info }>
 const tenants = new Map();
@@ -49,12 +65,19 @@ function recoverTenant(tenantId, db) {
   state.connected = false;
   console.log(`🩹 [${tenantId}] Crash detected, recovering session...`);
   emit(tenantId, 'disconnected', 'crashed');
+  sendTelegram(`🩹 [${tenantId}] WhatsApp session crashed (Puppeteer error). Auto-recovering...`);
   (async () => {
     try { if (state.client) await state.client.destroy(); } catch {}
     state.client = null;
     setTimeout(() => {
       state.recovering = false;
-      try { initTenant(tenantId, db); } catch (e) { console.error(`[${tenantId}] Recovery failed:`, e.message); }
+      try {
+        initTenant(tenantId, db);
+        sendTelegram(`✅ [${tenantId}] Auto-recovery finished — session restarting normally.`);
+      } catch (e) {
+        console.error(`[${tenantId}] Recovery failed:`, e.message);
+        sendTelegram(`❌ [${tenantId}] Auto-recovery FAILED: ${e.message}. Manual restart needed.`);
+      }
     }, 3000);
   })();
 }
@@ -177,14 +200,11 @@ function initTenant(tenantId, db) {
 
     db.upsertContact(phone, contactName);
 
-    const alreadyHandled = db.isContactBotHandled(phone);
     const lc = body.toLowerCase();
     let matchedSlot = null;
-    if (!alreadyHandled) {
-      for (const sfx of getCampaignSlots(db)) {
-        const kw = db.getConfig(`trigger_keyword${sfx}`);
-        if (kw && lc.includes(kw.toLowerCase())) { matchedSlot = sfx; break; }
-      }
+    for (const sfx of getCampaignSlots(db)) {
+      const kw = db.getConfig(`trigger_keyword${sfx}`);
+      if (kw && lc.includes(kw.toLowerCase())) { matchedSlot = sfx; break; }
     }
 
     const saved = db.saveMessage(phone, 'in', 'text', body, null, false, matchedSlot === null, msg.timestamp);
@@ -238,65 +258,99 @@ async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
   const state = tenants.get(tenantId);
   if (!state?.client) return;
   const client = state.client;
+  const visitCount = db.getVisitCount(phone);
 
   try {
-    const priceText = db.getConfig(`price_text${sfx}`);
-    if (priceText) {
-      try { const ch = await client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
-      await client.sendMessage(chatId, priceText);
-      const m = db.saveMessage(phone, 'out', 'text', priceText, null, true);
-      emit(tenantId, 'new_message', { phone, ...m });
-      await humanDelay(3000, 6000);
-    }
+    if (visitCount === 0) {
+      // First visit: full campaign flow
+      const priceText = db.getConfig(`price_text${sfx}`);
+      if (priceText) {
+        try { const ch = await client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
+        await client.sendMessage(chatId, priceText);
+        const m = db.saveMessage(phone, 'out', 'text', priceText, null, true);
+        emit(tenantId, 'new_message', { phone, ...m });
+        await humanDelay(3000, 6000);
+      }
 
-    const audioPath = db.getConfig(`audio_file${sfx}`);
-    if (audioPath && fs.existsSync(audioPath)) {
-      await humanDelay(2000, 4000);
-      const media = MessageMedia.fromFilePath(audioPath);
-      await client.sendMessage(chatId, media, { sendAudioAsVoice: true });
-      const m = db.saveMessage(phone, 'out', 'audio', '🎵 Voice message', audioPath, true);
-      emit(tenantId, 'new_message', { phone, ...m });
-      await humanDelay(4000, 8000);
-    }
+      const audioPath = db.getConfig(`audio_file${sfx}`);
+      if (audioPath && fs.existsSync(audioPath)) {
+        await humanDelay(2000, 4000);
+        const media = MessageMedia.fromFilePath(audioPath);
+        await client.sendMessage(chatId, media, { sendAudioAsVoice: true });
+        const m = db.saveMessage(phone, 'out', 'audio', '🎵 Voice message', audioPath, true);
+        emit(tenantId, 'new_message', { phone, ...m });
+        await humanDelay(4000, 8000);
+      }
 
-    const imagesJson = db.getConfig(`images${sfx}`);
-    if (imagesJson) {
-      for (const img of JSON.parse(imagesJson)) {
-        const imgPath = img.path || img;
-        if (fs.existsSync(imgPath)) {
-          await client.sendMessage(chatId, MessageMedia.fromFilePath(imgPath));
-          const m = db.saveMessage(phone, 'out', 'image', '🖼 Product image', imgPath, true);
-          emit(tenantId, 'new_message', { phone, ...m });
-          await humanDelay(2000, 5000);
+      const imagesJson = db.getConfig(`images${sfx}`);
+      if (imagesJson) {
+        for (const img of JSON.parse(imagesJson)) {
+          const imgPath = img.path || img;
+          if (fs.existsSync(imgPath)) {
+            await client.sendMessage(chatId, MessageMedia.fromFilePath(imgPath));
+            const m = db.saveMessage(phone, 'out', 'image', '🖼 Product image', imgPath, true);
+            emit(tenantId, 'new_message', { phone, ...m });
+            await humanDelay(2000, 5000);
+          }
         }
+      }
+
+      const compText = db.getConfig(`comparison_text${sfx}`);
+      if (compText) {
+        await humanDelay(3000, 6000);
+        try { const ch = await client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
+        await client.sendMessage(chatId, compText);
+        const m = db.saveMessage(phone, 'out', 'text', compText, null, true);
+        emit(tenantId, 'new_message', { phone, ...m });
+        await humanDelay(3000, 6000);
+      }
+
+      const compImagesJson = db.getConfig(`comparison_images${sfx}`);
+      if (compImagesJson) {
+        for (const img of JSON.parse(compImagesJson)) {
+          const imgPath = img.path || img;
+          if (fs.existsSync(imgPath)) {
+            await client.sendMessage(chatId, MessageMedia.fromFilePath(imgPath));
+            const m = db.saveMessage(phone, 'out', 'image', '🖼 Comparison image', imgPath, true);
+            emit(tenantId, 'new_message', { phone, ...m });
+            await humanDelay(2000, 5000);
+          }
+        }
+      }
+
+    } else if (visitCount === 1) {
+      // Second visit: returning message + audio
+      const returningText = db.getConfig('returning_text');
+      if (returningText) {
+        try { const ch = await client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
+        await client.sendMessage(chatId, returningText);
+        const m = db.saveMessage(phone, 'out', 'text', returningText, null, true);
+        emit(tenantId, 'new_message', { phone, ...m });
+        await humanDelay(3000, 6000);
+      }
+      const returningAudio = db.getConfig('returning_audio_file');
+      if (returningAudio && fs.existsSync(returningAudio)) {
+        await humanDelay(2000, 4000);
+        const media = MessageMedia.fromFilePath(returningAudio);
+        await client.sendMessage(chatId, media, { sendAudioAsVoice: true });
+        const m = db.saveMessage(phone, 'out', 'audio', '🎵 Voice message', returningAudio, true);
+        emit(tenantId, 'new_message', { phone, ...m });
+      }
+
+    } else {
+      // Third+ visit: repeat message only
+      const repeatText = db.getConfig('repeat_text');
+      if (repeatText) {
+        try { const ch = await client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
+        await client.sendMessage(chatId, repeatText);
+        const m = db.saveMessage(phone, 'out', 'text', repeatText, null, true);
+        emit(tenantId, 'new_message', { phone, ...m });
       }
     }
 
-    const compText = db.getConfig(`comparison_text${sfx}`);
-    if (compText) {
-      await humanDelay(3000, 6000);
-      try { const ch = await client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
-      await client.sendMessage(chatId, compText);
-      const m = db.saveMessage(phone, 'out', 'text', compText, null, true);
-      emit(tenantId, 'new_message', { phone, ...m });
-      await humanDelay(3000, 6000);
-    }
-
-    const compImagesJson = db.getConfig(`comparison_images${sfx}`);
-    if (compImagesJson) {
-      for (const img of JSON.parse(compImagesJson)) {
-        const imgPath = img.path || img;
-        if (fs.existsSync(imgPath)) {
-          await client.sendMessage(chatId, MessageMedia.fromFilePath(imgPath));
-          const m = db.saveMessage(phone, 'out', 'image', '🖼 Comparison image', imgPath, true);
-          emit(tenantId, 'new_message', { phone, ...m });
-          await humanDelay(2000, 5000);
-        }
-      }
-    }
-
+    db.incrementVisitCount(phone);
     db.markBotHandled(phone);
-    console.log(`🤖 [${tenantId}] Bot response sent to ${phone} (campaign${sfx || '1'})`);
+    console.log(`🤖 [${tenantId}] Bot response sent to ${phone} (campaign${sfx || '1'}, visit #${visitCount + 1})`);
 
     const REMINDER_DEFAULT = 'مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف';
     setTimeout(async () => {

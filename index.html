@@ -1456,6 +1456,44 @@ textarea.field-input { resize: vertical; min-height: 80px; line-height: 1.5; }
         <span data-i18n="addCampaign">Add Campaign</span>
       </button>
 
+      <!-- Returning Customers -->
+      <div class="s-card">
+        <div class="s-card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+          <span>Returning Customers</span>
+        </div>
+        <p class="hint">When a customer sends the trigger keyword again after the first time, send them a different message instead of the full campaign.</p>
+
+        <div style="margin-top:12px;padding:12px;background:var(--elevated);border-radius:var(--r);border:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--accent);letter-spacing:.07em;margin-bottom:10px">2ND VISIT — MESSAGE + AUDIO</div>
+          <label class="field-label">Message (2nd visit)</label>
+          <textarea class="field-input" id="s-returning-text" rows="3" placeholder="e.g. Welcome back! Here's our latest special offer..."></textarea>
+          <div style="margin-top:10px">
+            <label class="field-label">Voice note (optional)</label>
+            <div id="returning-audio-preview" style="display:none;margin-bottom:8px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);align-items:center;gap:10px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              <span id="returning-audio-name" style="font-size:12px;color:var(--t1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+              <button onclick="deleteReturningAudio()" style="background:none;border:none;color:var(--t2);cursor:pointer;padding:2px;line-height:1">✕</button>
+            </div>
+            <label for="returning-audio-input" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:7px 14px;background:var(--elevated);border:1px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--t2)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload voice note
+            </label>
+            <input type="file" id="returning-audio-input" accept="audio/*" style="display:none">
+          </div>
+        </div>
+
+        <div style="margin-top:10px;padding:12px;background:var(--elevated);border-radius:var(--r);border:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--amber);letter-spacing:.07em;margin-bottom:10px">3RD+ VISIT — MESSAGE ONLY</div>
+          <label class="field-label">Message (3rd visit and beyond)</label>
+          <textarea class="field-input" id="s-repeat-text" rows="3" placeholder="e.g. You already have our full offer! Feel free to place your order anytime 😊"></textarea>
+        </div>
+
+        <button class="btn-primary" id="save-returning-btn" style="margin-top:12px">Save Returning Messages</button>
+      </div>
+
       <!-- Reminder Message -->
       <div class="s-card">
         <div class="s-card-title">
@@ -2404,6 +2442,10 @@ async function loadConfig() {
     const ctEl = document.getElementById(`s-comparison-${n}`); if (ctEl && cfg[`comparison_text_${n}`]) ctEl.value = cfg[`comparison_text_${n}`];
   }
 
+  if (cfg.returning_text) document.getElementById('s-returning-text').value = cfg.returning_text;
+  if (cfg.repeat_text) document.getElementById('s-repeat-text').value = cfg.repeat_text;
+  if (cfg.returning_audio_name) showReturningAudioPreview(cfg.returning_audio_name);
+
   const reminderText = cfg.reminder_text || '';
   document.getElementById('s-reminder').value = reminderText;
   showReminderPreview(reminderText);
@@ -3036,6 +3078,37 @@ function showReminderPreview(text) {
     preview.style.display = 'none';
   }
 }
+
+document.getElementById('returning-audio-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('audio', file);
+  const r = await fetch('/api/upload/returning-audio', { method: 'POST', body: fd });
+  const data = await r.json();
+  if (data.success) showReturningAudioPreview(data.name);
+  e.target.value = '';
+});
+
+function showReturningAudioPreview(name) {
+  const preview = document.getElementById('returning-audio-preview');
+  document.getElementById('returning-audio-name').textContent = name;
+  preview.style.display = 'flex';
+}
+
+async function deleteReturningAudio() {
+  await api('/api/upload/returning-audio', 'DELETE');
+  const preview = document.getElementById('returning-audio-preview');
+  preview.style.display = 'none';
+  document.getElementById('returning-audio-name').textContent = '';
+}
+
+document.getElementById('save-returning-btn').addEventListener('click', async () => {
+  const returning_text = document.getElementById('s-returning-text').value.trim();
+  const repeat_text = document.getElementById('s-repeat-text').value.trim();
+  await api('/api/config', 'POST', { returning_text, repeat_text });
+  toast('Returning messages saved!', 'success');
+});
 
 document.getElementById('save-reminder-btn').addEventListener('click', async () => {
   const reminder_text = document.getElementById('s-reminder').value.trim();

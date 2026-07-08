@@ -17,12 +17,14 @@ class TenantDB {
     try { db.exec('ALTER TABLE contacts ADD COLUMN unread INTEGER DEFAULT 0'); } catch {}
     try { db.exec('ALTER TABLE contacts ADD COLUMN reminder_sent INTEGER DEFAULT 0'); } catch {}
     try { db.exec('ALTER TABLE contacts ADD COLUMN archived INTEGER DEFAULT 0'); } catch {}
+    try { db.exec('ALTER TABLE contacts ADD COLUMN bot_visit_count INTEGER DEFAULT 0'); } catch {}
     db.exec(`
       CREATE TABLE IF NOT EXISTS contacts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         phone TEXT UNIQUE NOT NULL,
         name TEXT,
         bot_handled INTEGER DEFAULT 0,
+        bot_visit_count INTEGER DEFAULT 0,
         unread INTEGER DEFAULT 0,
         archived INTEGER DEFAULT 0,
         reminder_sent INTEGER DEFAULT 0,
@@ -115,6 +117,15 @@ class TenantDB {
 
   markBotHandled(phone) {
     this.db.prepare('UPDATE contacts SET bot_handled = 1 WHERE phone = ?').run(phone);
+  }
+
+  getVisitCount(phone) {
+    const row = this.db.prepare('SELECT bot_visit_count FROM contacts WHERE phone = ?').get(phone);
+    return row?.bot_visit_count || 0;
+  }
+
+  incrementVisitCount(phone) {
+    this.db.prepare('UPDATE contacts SET bot_visit_count = bot_visit_count + 1 WHERE phone = ?').run(phone);
   }
 
   markAsRead(phone) {
