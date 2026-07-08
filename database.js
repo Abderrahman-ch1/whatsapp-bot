@@ -139,8 +139,9 @@ class TenantDB {
   shouldSendReminder(phone) {
     const contact = this.db.prepare('SELECT reminder_sent FROM contacts WHERE phone = ?').get(phone);
     if (!contact || contact.reminder_sent === 1) return false;
-    const lastMsg = this.db.prepare('SELECT direction FROM messages WHERE phone = ? ORDER BY created_at DESC LIMIT 1').get(phone);
-    return lastMsg && lastMsg.direction === 'out';
+    const lastMsg = this.db.prepare('SELECT direction, bot FROM messages WHERE phone = ? ORDER BY created_at DESC LIMIT 1').get(phone);
+    // Only remind if the last message was sent by the bot — skip if user replied manually
+    return lastMsg && lastMsg.direction === 'out' && lastMsg.bot === 1;
   }
 
   getConfig(key) {
