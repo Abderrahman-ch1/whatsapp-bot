@@ -133,6 +133,7 @@ function initTenant(tenantId, db) {
     state.connected = false;
     console.log(`📱 [${tenantId}] QR code ready`);
     emit(tenantId, 'qr', qr);
+    sendTelegram(`📱 [${tenantId}] WhatsApp session needs re-linking. Open the app and scan the QR code: http://167.233.101.240:3000`);
   });
 
   client.on('authenticated', () => {
@@ -168,7 +169,19 @@ function initTenant(tenantId, db) {
     state.info = null;
     console.log(`❌ [${tenantId}] Disconnected:`, reason);
     emit(tenantId, 'disconnected', reason);
-    setTimeout(() => { try { client.initialize(); } catch {} }, 3000);
+    const isLogout = reason === 'LOGOUT' || reason === 'UNPAIRED' || reason === 'UNPAIRED_IDLE';
+    if (isLogout) {
+      // Session fully invalidated — destroy and create a fresh client so QR regenerates cleanly
+      sendTelegram(`🔌 [${tenantId}] WhatsApp session was logged out (${reason}). Open the app to scan a new QR code: http://167.233.101.240:3000`);
+      (async () => {
+        try { await client.destroy(); } catch {}
+        state.client = null;
+        setTimeout(() => initTenant(tenantId, db), 3000);
+      })();
+    } else {
+      // Temporary disconnect — re-initialize the same client
+      setTimeout(() => { try { client.initialize(); } catch {} }, 3000);
+    }
   });
 
   // When the admin reads a chat on their phone, unread drops to 0 → clear it in the app too
