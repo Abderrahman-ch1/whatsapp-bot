@@ -116,7 +116,15 @@ function initTenant(tenantId, db) {
   fs.mkdirSync(tenantDir, { recursive: true });
 
   const puppeteerOpts = {
-    args: ['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--disable-gpu','--no-first-run','--no-zygote'],
+    args: [
+      '--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage',
+      '--disable-gpu','--no-first-run','--no-zygote',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-hang-monitor',
+      '--memory-pressure-off',
+    ],
     headless: true,
   };
   if (process.env.CHROMIUM_PATH) puppeteerOpts.executablePath = process.env.CHROMIUM_PATH;
@@ -162,6 +170,13 @@ function initTenant(tenantId, db) {
       try { await client.getState(); }
       catch (err) { clearInterval(heartbeat); if (isCrashError(err)) recoverTenant(tenantId, db); }
     }, 60000);
+
+    // Keep-alive: prevents WhatsApp from considering the session idle and logging it out
+    const keepAlive = setInterval(async () => {
+      const cur = tenants.get(tenantId);
+      if (!cur?.client || cur.client !== client || !cur.connected) { clearInterval(keepAlive); return; }
+      try { await client.pupPage?.evaluate(() => window.Store?.Presence?.setAvailable?.()); } catch {}
+    }, 5 * 60 * 1000);
   });
 
   client.on('disconnected', (reason) => {
