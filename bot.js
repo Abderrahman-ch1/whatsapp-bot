@@ -84,7 +84,7 @@ function recoverTenant(tenantId, db) {
 
 function clearChromiumLocks(tenantId) {
   const authDir = path.join(registry.getTenantDir(tenantId), '.wwebjs_auth');
-  const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket', '.lock'];
+  const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket', '.lock', 'DevToolsActivePort'];
   try {
     if (!fs.existsSync(authDir)) return;
     for (const entry of fs.readdirSync(authDir)) {
@@ -106,12 +106,9 @@ function clearChromiumLocks(tenantId) {
 
 function initTenant(tenantId, db) {
   const state = getState(tenantId);
-  if (state.client && state.connected) return;
+  // Block double-init: already connected OR already in the process of connecting
+  if (state.client) return;
 
-  if (state.client) {
-    try { state.client.destroy(); } catch {}
-    state.client = null;
-  }
 
   clearChromiumLocks(tenantId);
 
@@ -188,6 +185,7 @@ function initTenant(tenantId, db) {
   client.on('message_create', (msg) => {
     if (!msg.fromMe || msg.to.includes('@g.us')) return;
     const phone = jidToPhone(msg.to);
+    db.upsertContact(phone, msg._data?.notifyName || phone);
     const saved = db.saveMessage(phone, 'out', 'text', msg.body || '', null, false, true, msg.timestamp);
     emit(tenantId, 'new_message', { phone, ...saved });
   });
