@@ -52,17 +52,25 @@ function getState(tenantId) {
 }
 
 // Puppeteer/Chromium crash signatures — page died but no 'disconnected' event fired
-const CRASH_PATTERNS = ['detached Frame', 'Execution context was destroyed', 'Protocol error', 'Session closed', 'Target closed'];
+const CRASH_PATTERNS = [
+  'detached Frame', 'Execution context was destroyed', 'Protocol error',
+  'Session closed', 'Target closed', 'callFunctionOn timed out', 'ProtocolError',
+];
 function isCrashError(err) {
   const msg = err?.message || String(err || '');
   return CRASH_PATTERNS.some(p => msg.includes(p));
 }
+
+// Per-tenant send queue — one bot response at a time per tenant to avoid
+// concurrent Chromium operations overloading the CPU and causing timeouts
+const sendQueues = new Map();
 
 function recoverTenant(tenantId, db) {
   const state = tenants.get(tenantId);
   if (!state || state.recovering) return;
   state.recovering = true;
   state.connected = false;
+  sendQueues.delete(tenantId); // drop queued sends — they'll retry on next trigger
   console.log(`🩹 [${tenantId}] Crash detected, recovering session...`);
   emit(tenantId, 'disconnected', 'crashed');
   sendTelegram(`🩹 [${tenantId}] WhatsApp session crashed (Puppeteer error). Auto-recovering...`);
@@ -131,7 +139,7 @@ function initTenant(tenantId, db) {
 
   const client = new Client({
     authStrategy: new LocalAuth({ dataPath: path.join(tenantDir, '.wwebjs_auth') }),
-    puppeteer: puppeteerOpts,
+    puppeteer: { ...puppeteerOpts, protocolTimeout: 60000 },
   });
 
   state.client = client;
@@ -237,8 +245,15 @@ function initTenant(tenantId, db) {
     emit(tenantId, 'new_message', { phone, name: contactName, ...saved, countUnread: matchedSlot === null });
 
     if (matchedSlot !== null) {
-      await sleep(getSmartDelay());
-      await sendBotResponse(tenantId, phoneToChatId(phone), phone, db, matchedSlot);
+      const chatId = phoneToChatId(phone);
+      const sfx = matchedSlot;
+      if (!sendQueues.has(tenantId)) sendQueues.set(tenantId, Promise.resolve());
+      const tail = sendQueues.get(tenantId).then(async () => {
+        if (!tenants.get(tenantId)?.connected) return;
+        await sleep(getSmartDelay());
+        await sendBotResponse(tenantId, chatId, phone, db, sfx);
+      }).catch(() => {});
+      sendQueues.set(tenantId, tail);
     }
   });
 
@@ -249,6 +264,7 @@ function initTenant(tenantId, db) {
 async function stopTenant(tenantId) {
   const state = tenants.get(tenantId);
   if (!state) return;
+  sendQueues.delete(tenantId);
   try { if (state.client) await state.client.destroy(); } catch {}
   tenants.delete(tenantId);
 }
