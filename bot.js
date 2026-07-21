@@ -143,6 +143,7 @@ function initTenant(tenantId, db) {
   });
 
   state.client = client;
+  let initWatchdog;
 
   client.on('qr', (qr) => {
     state.qr = qr;
@@ -159,6 +160,7 @@ function initTenant(tenantId, db) {
   });
 
   client.on('ready', () => {
+    clearTimeout(initWatchdog);
     state.connected = true;
     state.qr = null;
     state.info = client.info;
@@ -259,7 +261,15 @@ function initTenant(tenantId, db) {
   });
 
   console.log(`🚀 [${tenantId}] Starting WhatsApp...`);
-  client.initialize();
+  initWatchdog = setTimeout(() => {
+    console.log(`⏱️ [${tenantId}] Startup watchdog fired — forcing recovery`);
+    recoverTenant(tenantId, db);
+  }, 150000); // 2.5 min — if ready never fires, restart
+  client.initialize().catch((err) => {
+    clearTimeout(initWatchdog);
+    console.error(`[${tenantId}] initialize() failed:`, err.message);
+    if (!state.recovering) recoverTenant(tenantId, db);
+  });
 }
 
 async function stopTenant(tenantId) {
