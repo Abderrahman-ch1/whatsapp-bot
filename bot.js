@@ -201,8 +201,9 @@ function initTenant(tenantId, db) {
         state.client = null;
         setTimeout(() => initTenant(tenantId, db), 3000);
       })();
-    } else {
-      // Temporary disconnect — re-initialize the same client
+    } else if (!state.recovering && state.client === client) {
+      // Temporary disconnect — re-initialize only if no crash recovery is already in progress
+      // and this client is still the active one (guard against stale event from destroyed client)
       setTimeout(() => { try { client.initialize(); } catch {} }, 3000);
     }
   });
