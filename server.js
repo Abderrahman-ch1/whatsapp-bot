@@ -615,9 +615,12 @@ app.post('/api/upload/audio', requireAuth, uploadAudio.single('audio'), (req, re
   const slot = parseInt(req.query.slot) || 1;
   const sfx  = slot > 1 ? `_${slot}` : '';
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  getDB(req).setConfig(`audio_file${sfx}`, req.file.path);
+  const converted = convertToOpusOgg(req.file.path);
+  const finalPath = converted || req.file.path;
+  if (converted && converted !== req.file.path) try { fs.unlinkSync(req.file.path); } catch {}
+  getDB(req).setConfig(`audio_file${sfx}`, finalPath);
   getDB(req).setConfig(`audio_name${sfx}`, req.file.originalname);
-  res.json({ success: true, path: req.file.path, name: req.file.originalname });
+  res.json({ success: true, path: finalPath, name: req.file.originalname });
 });
 
 app.delete('/api/upload/audio', requireAuth, (req, res) => {
@@ -667,10 +670,13 @@ const uploadReturningAudio = multer({
 app.post('/api/upload/returning-audio', requireAuth, uploadReturningAudio.single('audio'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const old = getDB(req).getConfig('returning_audio_file');
-  if (old && fs.existsSync(old)) fs.unlinkSync(old);
-  getDB(req).setConfig('returning_audio_file', req.file.path);
+  if (old && fs.existsSync(old)) try { fs.unlinkSync(old); } catch {}
+  const converted = convertToOpusOgg(req.file.path);
+  const finalPath = converted || req.file.path;
+  if (converted && converted !== req.file.path) try { fs.unlinkSync(req.file.path); } catch {}
+  getDB(req).setConfig('returning_audio_file', finalPath);
   getDB(req).setConfig('returning_audio_name', req.file.originalname);
-  res.json({ success: true, path: req.file.path, name: req.file.originalname });
+  res.json({ success: true, path: finalPath, name: req.file.originalname });
 });
 
 app.delete('/api/upload/returning-audio', requireAuth, (req, res) => {
