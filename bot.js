@@ -61,9 +61,11 @@ function isCrashError(err) {
   return CRASH_PATTERNS.some(p => msg.includes(p));
 }
 
-// Per-tenant send queue — one bot response at a time per tenant to avoid
-// concurrent Chromium operations overloading the CPU and causing timeouts
+// Per-tenant queue (ordering + cancellation) + global semaphore (cross-tenant
+// serialization). Only one bot sends at a time across all tenants — audio and
+// image uploads are CPU-heavy and cause protocol timeouts when concurrent.
 const sendQueues = new Map();
+let sendingSemaphore = Promise.resolve();
 
 function recoverTenant(tenantId, db) {
   const state = tenants.get(tenantId);
@@ -254,7 +256,14 @@ function initTenant(tenantId, db) {
       const tail = sendQueues.get(tenantId).then(async () => {
         if (!tenants.get(tenantId)?.connected) return;
         await sleep(getSmartDelay());
-        await sendBotResponse(tenantId, chatId, phone, db, sfx);
+        if (!tenants.get(tenantId)?.connected) return;
+        // Global semaphore: only one bot sends at a time across all tenants
+        const myTurn = sendingSemaphore.then(async () => {
+          if (!tenants.get(tenantId)?.connected) return;
+          await sendBotResponse(tenantId, chatId, phone, db, sfx);
+        }).catch(() => {});
+        sendingSemaphore = myTurn;
+        await myTurn;
       }).catch(() => {});
       sendQueues.set(tenantId, tail);
     }
@@ -406,23 +415,27 @@ async function sendBotResponse(tenantId, chatId, phone, db, sfx = '') {
     console.log(`🤖 [${tenantId}] Bot response sent to ${phone} (campaign${sfx || '1'}, visit #${visitCount + 1})`);
 
     const REMINDER_DEFAULT = 'مرحبا ممكن تخلي لينا شحال بغيتي و الإسم و العنوان و رقم الهاتف';
-    setTimeout(async () => {
-      try {
-        if (!db.shouldSendReminder(phone)) return;
-        const reminderText = db.getConfig('reminder_text') || REMINDER_DEFAULT;
-        if (!reminderText.trim()) return;
-        const cur = tenants.get(tenantId);
-        if (!cur?.client) return;
-        try { const ch = await cur.client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
-        await cur.client.sendMessage(chatId, reminderText);
-        const m = db.saveMessage(phone, 'out', 'text', reminderText, null, true);
-        emit(tenantId, 'new_message', { phone, ...m });
-        db.markReminderSent(phone);
-        console.log(`⏰ [${tenantId}] Reminder sent to ${phone}`);
-      } catch (err) {
-        console.error(`[${tenantId}] Reminder error:`, err.message);
-        if (isCrashError(err)) recoverTenant(tenantId, db);
-      }
+    setTimeout(() => {
+      // Route reminder through global semaphore — same as campaign sends
+      const myTurn = sendingSemaphore.then(async () => {
+        try {
+          if (!db.shouldSendReminder(phone)) return;
+          const reminderText = db.getConfig('reminder_text') || REMINDER_DEFAULT;
+          if (!reminderText.trim()) return;
+          const cur = tenants.get(tenantId);
+          if (!cur?.client) return;
+          try { const ch = await cur.client.getChatById(chatId); await ch.sendStateTyping(); await humanDelay(1500, 3000); await ch.clearState(); } catch {}
+          await cur.client.sendMessage(chatId, reminderText);
+          const m = db.saveMessage(phone, 'out', 'text', reminderText, null, true);
+          emit(tenantId, 'new_message', { phone, ...m });
+          db.markReminderSent(phone);
+          console.log(`⏰ [${tenantId}] Reminder sent to ${phone}`);
+        } catch (err) {
+          console.error(`[${tenantId}] Reminder error:`, err.message);
+          if (isCrashError(err)) recoverTenant(tenantId, db);
+        }
+      }).catch(() => {});
+      sendingSemaphore = myTurn;
     }, 15 * 60 * 1000);
 
   } catch (err) {
