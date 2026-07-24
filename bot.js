@@ -146,13 +146,17 @@ function initTenant(tenantId, db) {
 
   state.client = client;
   let initWatchdog;
+  let qrNotified = false; // only notify Telegram once per session, not on every QR refresh
 
   client.on('qr', (qr) => {
     state.qr = qr;
     state.connected = false;
     console.log(`📱 [${tenantId}] QR code ready`);
     emit(tenantId, 'qr', qr);
-    sendTelegram(`📱 [${tenantId}] WhatsApp session needs re-linking. Open the app and scan the QR code: http://167.233.101.240:3000`);
+    if (!qrNotified) {
+      qrNotified = true;
+      sendTelegram(`📱 [${tenantId}] WhatsApp session needs re-linking. Open the app and scan the QR code: http://167.233.101.240:3000`);
+    }
   });
 
   client.on('authenticated', () => {
