@@ -2,6 +2,7 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const { spawnSync } = require('child_process');
 const registry = require('./registry');
 
 let _io = null;
@@ -67,6 +68,17 @@ function isCrashError(err) {
 const sendQueues = new Map();
 let sendingSemaphore = Promise.resolve();
 
+function killChromiumForTenant(tenantId, client) {
+  // Best-effort: kill any lingering Chromium processes tied to this tenant's user-data-dir
+  const userDataDir = path.join(registry.getTenantDir(tenantId), '.wwebjs_auth', 'session');
+  try { spawnSync('pkill', ['-9', '-f', userDataDir], { timeout: 5000 }); } catch {}
+  // Also kill by PID if we can get it from the client object
+  try {
+    const pid = client?.pupBrowser?.process()?.pid;
+    if (pid) process.kill(pid, 'SIGKILL');
+  } catch {}
+}
+
 function recoverTenant(tenantId, db) {
   const state = tenants.get(tenantId);
   if (!state || state.recovering) return;
@@ -76,9 +88,15 @@ function recoverTenant(tenantId, db) {
   console.log(`🩹 [${tenantId}] Crash detected, recovering session...`);
   emit(tenantId, 'disconnected', 'crashed');
   sendTelegram(`🩹 [${tenantId}] WhatsApp session crashed (Puppeteer error). Auto-recovering...`);
+  const clientToKill = state.client;
+  state.client = null;
   (async () => {
-    try { if (state.client) await state.client.destroy(); } catch {}
-    state.client = null;
+    // Attempt graceful destroy with a 5s timeout, then force-kill regardless
+    await Promise.race([
+      (async () => { try { if (clientToKill) await clientToKill.destroy(); } catch {} })(),
+      new Promise(r => setTimeout(r, 5000)),
+    ]);
+    killChromiumForTenant(tenantId, clientToKill);
     setTimeout(() => {
       state.recovering = false;
       try {
