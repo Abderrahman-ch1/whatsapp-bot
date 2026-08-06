@@ -45,6 +45,8 @@ class TenantDB {
         key TEXT PRIMARY KEY,
         value TEXT
       );
+      CREATE INDEX IF NOT EXISTS idx_messages_phone_created ON messages(phone, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_contacts_last_message  ON contacts(last_message_at DESC);
     `);
   }
 
