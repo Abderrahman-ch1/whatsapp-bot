@@ -14,15 +14,16 @@ try {
     });
 } catch {}
 
-const express    = require('express');
-const { Server } = require('socket.io');
-const http       = require('http');
-const https      = require('https');
-const path       = require('path');
-const multer     = require('multer');
-const cors       = require('cors');
-const fs         = require('fs');
-const crypto     = require('crypto');
+const express      = require('express');
+const { Server }   = require('socket.io');
+const http         = require('http');
+const https        = require('https');
+const path         = require('path');
+const multer       = require('multer');
+const cors         = require('cors');
+const fs           = require('fs');
+const crypto       = require('crypto');
+const compression  = require('compression');
 const { spawnSync } = require('child_process');
 
 const registry         = require('./registry');
@@ -101,6 +102,7 @@ const io     = new Server(server);
 
 bot.setIO(io);
 
+app.use(compression());
 app.use(cors());
 app.use(express.json());
 

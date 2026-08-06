@@ -1880,6 +1880,7 @@ const state = {
   settingsVisible: true,
   activeTab: 'all',
   showArchived: false,
+  convLimit: 100,
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -2087,6 +2088,7 @@ function updateSubPill() {
 async function loadConversations() {
   const url = state.showArchived ? '/api/conversations?archived=1' : '/api/conversations';
   state.conversations = await api(url);
+  state.convLimit = 100; // reset page on fresh load
   renderConvList();
 }
 
@@ -2161,31 +2163,8 @@ function switchTab(tab) {
   renderConvList(document.getElementById('search').value);
 }
 
-function renderConvList(filter = '') {
-  const list = document.getElementById('conv-list');
-  updateFollowupBadge();
-
-  let pool = state.activeTab === 'followups'
-    ? state.conversations.filter(isFollowup)
-    : state.conversations;
-
-  const filtered = filter
-    ? pool.filter(c =>
-        (c.name || c.phone).toLowerCase().includes(filter.toLowerCase()) ||
-        c.phone.includes(filter))
-    : pool;
-
-  if (!filtered.length) {
-    list.innerHTML = `<div class="sidebar-empty">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-      </svg>
-      <p>${filter ? 'No results found.' : state.activeTab === 'followups' ? 'No follow-ups yet.<br>Clients who reply after the bot will appear here.' : 'No conversations yet.<br>Messages from customers will appear here.'}</p>
-    </div>`;
-    return;
-  }
-
-  list.innerHTML = filtered.map(c => `
+function buildConvItemHTML(c) {
+  return `
     <div class="conv-item ${c.phone === state.activePhone ? 'active' : ''} ${c.unread > 0 ? 'has-unread' : ''}"
          onclick="selectConv('${c.phone}')" data-phone="${c.phone}">
       <div class="avatar" style="background:${avatarColor(c.phone)}">${avatarLetter(c.name || c.phone)}</div>
@@ -2218,8 +2197,50 @@ function renderConvList(filter = '') {
           </button>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+}
+
+const CONV_PAGE = 100; // items rendered per page
+
+function renderConvList(filter = '') {
+  const list = document.getElementById('conv-list');
+  updateFollowupBadge();
+
+  let pool = state.activeTab === 'followups'
+    ? state.conversations.filter(isFollowup)
+    : state.conversations;
+
+  const filtered = filter
+    ? pool.filter(c =>
+        (c.name || c.phone).toLowerCase().includes(filter.toLowerCase()) ||
+        c.phone.includes(filter))
+    : pool;
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="sidebar-empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+      <p>${filter ? 'No results found.' : state.activeTab === 'followups' ? 'No follow-ups yet.<br>Clients who reply after the bot will appear here.' : 'No conversations yet.<br>Messages from customers will appear here.'}</p>
+    </div>`;
+    return;
+  }
+
+  // When searching show all results; when browsing cap at CONV_PAGE for performance
+  const limit = filter ? filtered.length : (state.convLimit || CONV_PAGE);
+  const visible = filtered.slice(0, limit);
+  const remaining = filtered.length - visible.length;
+
+  let html = visible.map(buildConvItemHTML).join('');
+  if (remaining > 0) {
+    html += `<div style="padding:12px 16px;text-align:center">
+      <button onclick="state.convLimit=(state.convLimit||${CONV_PAGE})+${CONV_PAGE};renderConvList(document.getElementById('search').value)"
+        style="background:none;border:1px solid var(--border);border-radius:8px;padding:8px 20px;color:var(--t2);cursor:pointer;font-size:13px;width:100%">
+        Show ${Math.min(remaining, CONV_PAGE)} more of ${remaining} remaining
+      </button>
+    </div>`;
+  }
+  list.innerHTML = html;
 }
 
 function lastThree(phone) {
